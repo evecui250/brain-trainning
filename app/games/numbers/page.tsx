@@ -62,17 +62,15 @@ export default function NumbersGame() {
   )
 
   if (finished) {
-    const score = Math.max(100 - Math.floor(elapsed / 3), 10)
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
         {header}
         <div className="flex-1 flex flex-col items-center justify-center">
-          <p className="text-slate-500 text-base mb-2">最终得分</p>
-          <p className="text-7xl font-bold text-indigo-600 mb-1">{score}</p>
-          <p className="text-slate-400 text-base mb-2">用时 {elapsed} 秒</p>
-          <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
+          <p className="text-slate-500 text-base mb-2">完成！用时</p>
+          <p className="text-7xl font-bold text-emerald-500 mb-1">{elapsed}</p>
+          <p className="text-slate-400 text-xl mb-8">秒</p>
           <button
-            onClick={() => { addSession('numbers', '数字接龙', score); router.push('/games') }}
+            onClick={() => { addSession('numbers', '数字接龙', elapsed); router.push('/games') }}
             className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
           >
             记录并继续

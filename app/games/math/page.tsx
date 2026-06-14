@@ -119,7 +119,7 @@ export default function MathGame() {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        {(['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '⌫', '✓'] as const).map((k, i) => {
+        {(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '⌫', '✓'] as const).map((k, i) => {
           if (k === '✓') {
             return (
               <button

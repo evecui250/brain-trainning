@@ -177,7 +177,6 @@ export default function MemoryGame() {
   }, [selected])
 
   if (done) {
-    const score = Math.max(100 - (attempts - CARD_DEFS.length) * 5, 10)
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
         <div className="flex items-center gap-3 mb-8">
@@ -185,12 +184,11 @@ export default function MemoryGame() {
           <h1 className="text-xl font-bold text-slate-800">翻牌记忆</h1>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center">
-          <p className="text-slate-500 text-base mb-2">最终得分</p>
-          <p className="text-7xl font-bold text-indigo-600 mb-1">{score}</p>
-          <p className="text-slate-400 text-base mb-2">翻牌 {attempts} 次完成</p>
-          <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
+          <p className="text-slate-500 text-base mb-2">全部配对！翻牌</p>
+          <p className="text-7xl font-bold text-blue-500 mb-1">{attempts}</p>
+          <p className="text-slate-400 text-xl mb-8">次</p>
           <button
-            onClick={() => { addSession('memory', '翻牌记忆', score); router.push('/games') }}
+            onClick={() => { addSession('memory', '翻牌记忆', attempts); router.push('/games') }}
             className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
           >
             记录并继续

@@ -21,8 +21,18 @@ function fmtFull(d: string) {
   return `${y}年${parseInt(m)}月${parseInt(day)}日`
 }
 
-function scoreLabel(score: number): string {
+function scoreLabel(score: number, gameType: string): string {
+  if (gameType === 'numbers') return `${score} 秒`
+  if (gameType === 'memory')  return `${score} 次`
   return `${score} 分`
+}
+
+function isBetter(incoming: Session, existing: Session): boolean {
+  // For time/count metrics, lower is better
+  if (incoming.gameType === 'numbers' || incoming.gameType === 'memory') {
+    return incoming.score < existing.score
+  }
+  return incoming.score > existing.score
 }
 
 export default function StatsPage() {
@@ -102,10 +112,10 @@ export default function StatsPage() {
           {sortedDates.map(date => {
             const daySessions = sessionsByDate[date]
             const prog = dailyProgress.find(p => p.date === date)
-            // Highest score per game type for this day
+            // Best result per game type (higher score for most, lower for time/count games)
             const best = Object.values(
               daySessions.reduce<Record<string, Session>>((acc, s) => {
-                if (!acc[s.gameType] || s.score > acc[s.gameType].score) acc[s.gameType] = s
+                if (!acc[s.gameType] || isBetter(s, acc[s.gameType])) acc[s.gameType] = s
                 return acc
               }, {})
             )
@@ -130,7 +140,7 @@ export default function StatsPage() {
                           <span className="text-base text-slate-700">{s.gameName}</span>
                         </div>
                         <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-                          {scoreLabel(s.score)}
+                          {scoreLabel(s.score, s.gameType)}
                         </span>
                       </div>
                     )
