@@ -7,9 +7,15 @@ import NavBar from '@/components/NavBar'
 
 export default async function GamesPage() {
   const date = getToday()
-  const sessions = await prisma.gameSession.findMany({
-    where: { date, completed: true },
-  })
+  let sessions: { gameType: string }[] = []
+  try {
+    sessions = await prisma.gameSession.findMany({
+      where: { date, completed: true },
+      select: { gameType: true },
+    })
+  } catch {
+    // DB unavailable — show empty progress
+  }
   const playedTypes = new Set(sessions.map(s => s.gameType))
   const gamesCompleted = sessions.length
   const goalReached = gamesCompleted >= DAILY_GOAL
@@ -35,8 +41,8 @@ export default async function GamesPage() {
         <div className="bg-green-100 border border-green-300 rounded-2xl p-4 mb-5 text-center">
           <p className="text-2xl">🎉</p>
           <p className="text-green-700 font-bold text-xl">今日训练目标已完成！</p>
-          <Link href="/quiz" className="block mt-3 bg-green-500 text-white text-lg font-semibold py-3 rounded-xl">
-            去完成每日测试 →
+          <Link href="/stats" className="block mt-3 bg-green-500 text-white text-lg font-semibold py-3 rounded-xl">
+            查看训练记录 →
           </Link>
         </div>
       )}

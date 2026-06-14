@@ -24,17 +24,21 @@ function calcStreak(dates: string[]): number {
 
 async function getTodayData() {
   const date = getToday()
-  const [progress, sessions, allDates] = await Promise.all([
-    prisma.dailyProgress.findUnique({ where: { date } }),
-    prisma.gameSession.findMany({ where: { date, completed: true }, orderBy: { createdAt: 'asc' } }),
-    prisma.dailyProgress.findMany({ orderBy: { date: 'asc' }, select: { date: true } }),
-  ])
-  const streak = calcStreak(allDates.map(d => d.date))
-  return { progress, sessions, streak }
+  try {
+    const [progress, sessions, allDates] = await Promise.all([
+      prisma.dailyProgress.findUnique({ where: { date } }),
+      prisma.gameSession.findMany({ where: { date, completed: true }, orderBy: { createdAt: 'asc' } }),
+      prisma.dailyProgress.findMany({ orderBy: { date: 'asc' }, select: { date: true } }),
+    ])
+    const streak = calcStreak(allDates.map(d => d.date))
+    return { progress, sessions, streak, error: false }
+  } catch {
+    return { progress: null, sessions: [], streak: 0, error: true }
+  }
 }
 
 export default async function Home() {
-  const { progress, sessions, streak } = await getTodayData()
+  const { progress, sessions, streak, error } = await getTodayData()
   const gamesCompleted = progress?.gamesCompleted ?? 0
   const goalReached = progress?.goalReached ?? false
   const today = getToday()
@@ -42,6 +46,13 @@ export default async function Home() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       <NavBar />
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4 text-center">
+          <p className="text-red-600 text-lg font-semibold">⚠️ 数据库连接失败</p>
+          <p className="text-red-500 text-base mt-1">请检查 Vercel 环境变量 DATABASE_URL 是否正确设置</p>
+        </div>
+      )}
 
       {/* Header */}
       <div className="mb-6">
