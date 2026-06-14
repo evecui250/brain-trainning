@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/NavBar'
+import { addSession } from '@/lib/storage'
 
 const ROUNDS = 10
 
@@ -37,7 +38,6 @@ export default function MathGame() {
   const [input, setInput] = useState('')
   const [state, setState] = useState<State>('waiting')
   const [done, setDone] = useState(false)
-  const [saving, setSaving] = useState(false)
 
   const p = problems[idx]
 
@@ -69,13 +69,8 @@ export default function MathGame() {
     }, 1200)
   }, [state, input, p.answer, idx])
 
-  async function handleComplete() {
-    setSaving(true)
-    await fetch('/api/games/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: 'math', gameName: '简单计算', score: score * 10 }),
-    })
+  function handleComplete() {
+    addSession('math', '简单计算', score * 10)
     router.push('/games')
   }
 
@@ -151,9 +146,9 @@ export default function MathGame() {
           <p className="text-5xl mb-2">🎉</p>
           <p className="text-2xl font-bold text-green-700 mb-1">完成！</p>
           <p className="text-xl text-gray-600 mb-4">答对 {score} / {ROUNDS} 题</p>
-          <button onClick={handleComplete} disabled={saving}
+          <button onClick={handleComplete}
             className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            {saving ? '保存中...' : '记录并继续 →'}
+            记录并继续 →
           </button>
         </div>
       )}

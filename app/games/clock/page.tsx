@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/NavBar'
+import { addSession } from '@/lib/storage'
 
 const ROUNDS = 5
 
@@ -80,7 +81,6 @@ export default function ClockGame() {
   const [score, setScore] = useState(0)
   const [selected, setSelected] = useState<{ h: number; m: number } | null>(null)
   const [done, setDone] = useState(false)
-  const [saving, setSaving] = useState(false)
 
   const handleSelect = useCallback((opt: { h: number; m: number }) => {
     if (selected) return
@@ -98,13 +98,8 @@ export default function ClockGame() {
     }, 1200)
   }, [selected, correct, round])
 
-  async function handleComplete() {
-    setSaving(true)
-    await fetch('/api/games/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: 'clock', gameName: '认识时钟', score: score * 20 }),
-    })
+  function handleComplete() {
+    addSession('clock', '认识时钟', score * 20)
     router.push('/games')
   }
 
@@ -149,9 +144,9 @@ export default function ClockGame() {
           <p className="text-4xl mb-2">🎉</p>
           <p className="text-2xl font-bold text-green-700 mb-1">完成！</p>
           <p className="text-xl text-gray-600 mb-4">答对 {score} / {ROUNDS} 题</p>
-          <button onClick={handleComplete} disabled={saving}
+          <button onClick={handleComplete}
             className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            {saving ? '保存中...' : '记录并继续 →'}
+            记录并继续 →
           </button>
         </div>
       )}

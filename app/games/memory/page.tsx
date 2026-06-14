@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/NavBar'
+import { addSession } from '@/lib/storage'
 
 // ─── SVG card faces ────────────────────────────────────────────────────────
 
@@ -145,7 +146,6 @@ export default function MemoryGame() {
   const [attempts, setAttempts] = useState(0)
   const [matched, setMatched] = useState(0)
   const [done, setDone] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [disabled, setDisabled] = useState(false)
 
   const handleFlip = useCallback((id: number) => {
@@ -189,14 +189,9 @@ export default function MemoryGame() {
     }
   }, [selected])
 
-  async function handleComplete() {
-    setSaving(true)
+  function handleComplete() {
     const score = Math.max(100 - (attempts - CARD_DEFS.length) * 5, 10)
-    await fetch('/api/games/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: 'memory', gameName: '翻牌记忆', score }),
-    })
+    addSession('memory', '翻牌记忆', score)
     router.push('/games')
   }
 
@@ -255,9 +250,9 @@ export default function MemoryGame() {
           <p className="text-4xl mb-2">🎉</p>
           <p className="text-2xl font-bold text-green-700 mb-1">全部配对成功！</p>
           <p className="text-lg text-gray-600 mb-4">共翻牌 {attempts} 次</p>
-          <button onClick={handleComplete} disabled={saving}
+          <button onClick={handleComplete}
             className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            {saving ? '保存中...' : '记录并继续 →'}
+            记录并继续 →
           </button>
         </div>
       )}

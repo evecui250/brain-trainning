@@ -2,20 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import NavBar from '@/components/NavBar'
-import { GAME_LIST } from '@/lib/utils'
+import { GAME_LIST, DAILY_GOAL } from '@/lib/utils'
+import { getStats, type Session } from '@/lib/storage'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 
-type Session = { date: string; gameType: string; gameName: string; score: number }
-type DailyProgress = { date: string; gamesCompleted: number; goalReached: boolean }
-type Stats = {
-  dailyProgress: DailyProgress[]
-  totalSessions: number
-  streak: number
-  sessions: Session[]
-}
+type StatsData = ReturnType<typeof getStats>
 
 function fmtDate(d: string) {
   const [, m, day] = d.split('-')
@@ -28,45 +21,40 @@ function fmtFull(d: string) {
 }
 
 function scoreLabel(gameType: string, score: number): string {
-  if (score === 0) return '已完成'
   switch (gameType) {
     case 'math':    return `${Math.round(score / 10)}/10 答对`
-    case 'clock':   return `${score}/5 答对`
-    case 'word':    return `${score}/5 答对`
-    case 'pattern': return `${score} 关通过`
-    case 'numbers': return `${score}秒完成`
-    case 'memory':  return '已完成'
-    default:        return `${score} 分`
+    case 'clock':   return `${Math.round(score / 20)}/5 答对`
+    case 'word':    return `${score}% 正确`
+    case 'pattern': return `${score}% 通过`
+    case 'numbers': return score > 0 ? `${score}秒` : '已完成'
+    default:        return score > 0 ? `${score}分` : '已完成'
   }
 }
 
 export default function StatsPage() {
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [stats, setStats] = useState<StatsData | null>(null)
 
   useEffect(() => {
-    fetch('/api/stats').then(r => r.json()).then(setStats)
+    setStats(getStats())
   }, [])
 
   if (!stats) {
     return (
       <div className="max-w-lg mx-auto px-4 py-6 text-center text-gray-500 text-xl mt-16">
-        <NavBar />
-        加载中...
+        <NavBar />加载中...
       </div>
     )
   }
 
-  const { dailyProgress, totalSessions, streak, sessions } = stats
+  const { sessions, dailyProgress, totalSessions, streak } = stats
   const goalDays = dailyProgress.filter(p => p.goalReached).length
 
   const chartData = dailyProgress
     .slice(-14)
-    .map(p => ({ date: fmtDate(p.date), games: p.gamesCompleted, goal: p.goalReached }))
+    .map(p => ({ date: fmtDate(p.date), games: p.gamesCompleted }))
 
-  // Group sessions by date
   const sessionsByDate = sessions.reduce<Record<string, Session[]>>((acc, s) => {
-    if (!acc[s.date]) acc[s.date] = []
-    acc[s.date].push(s)
+    ;(acc[s.date] ??= []).push(s)
     return acc
   }, {})
   const sortedDates = Object.keys(sessionsByDate).sort().reverse().slice(0, 30)
@@ -76,7 +64,6 @@ export default function StatsPage() {
       <NavBar />
       <h1 className="text-3xl font-bold text-gray-800 mb-5">📊 训练记录</h1>
 
-      {/* Summary */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
           <p className="text-4xl font-bold text-orange-500">{streak}</p>
@@ -92,7 +79,6 @@ export default function StatsPage() {
         </div>
       </div>
 
-      {/* 14-day bar chart */}
       {chartData.length > 0 && (
         <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-3">近14天每日训练数</h2>
@@ -103,22 +89,13 @@ export default function StatsPage() {
               <YAxis domain={[0, 8]} ticks={[0, 2, 4, 5, 8]} tick={{ fontSize: 12 }} />
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <Tooltip formatter={(val: any) => [`${val} 个`, '游戏数']} />
-              <Bar
-                dataKey="games"
-                radius={[4, 4, 0, 0]}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                fill="#60a5fa"
-                // color each bar green if goal reached
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                label={false}
-              />
+              <Bar dataKey="games" fill="#60a5fa" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-center text-sm text-gray-400 mt-1">蓝色=训练，满5个为完成目标</p>
+          <p className="text-center text-sm text-gray-400 mt-1">满{DAILY_GOAL}个为完成目标</p>
         </div>
       )}
 
-      {/* Per-day game history */}
       <h2 className="text-2xl font-bold text-gray-800 mb-3">每日详细记录</h2>
 
       {sortedDates.length === 0 ? (
@@ -134,15 +111,13 @@ export default function StatsPage() {
             const prog = dailyProgress.find(p => p.date === date)
             return (
               <div key={date} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                {/* Date header */}
                 <div className={`px-4 py-3 flex items-center justify-between ${prog?.goalReached ? 'bg-green-50' : 'bg-gray-50'}`}>
                   <span className="text-lg font-semibold text-gray-700">{fmtFull(date)}</span>
                   {prog?.goalReached
                     ? <span className="text-green-600 font-semibold text-base">✅ 目标达成</span>
-                    : <span className="text-gray-400 text-base">{daySessions.length}/5 个游戏</span>
+                    : <span className="text-gray-400 text-base">{daySessions.length}/{DAILY_GOAL} 个游戏</span>
                   }
                 </div>
-                {/* Game rows */}
                 <div className="divide-y divide-gray-50">
                   {daySessions.map((s, i) => {
                     const def = GAME_LIST.find(g => g.type === s.gameType)

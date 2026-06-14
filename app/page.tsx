@@ -1,69 +1,39 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
-import { getToday, formatDate, getWeekday, DAILY_GOAL, GAME_LIST } from '@/lib/utils'
+import { formatDate, getWeekday, DAILY_GOAL, GAME_LIST } from '@/lib/utils'
+import { getTodayData, getStats, type Session } from '@/lib/storage'
 import NavBar from '@/components/NavBar'
 
-function calcStreak(dates: string[]): number {
-  if (dates.length === 0) return 0
-  const today = getToday()
-  const sorted = [...new Set(dates)].sort().reverse()
-  let streak = 0
-  let current = today
-  for (const date of sorted) {
-    if (date === current) {
-      streak++
-      const d = new Date(current + 'T00:00:00')
-      d.setDate(d.getDate() - 1)
-      current = d.toISOString().split('T')[0]
-    } else break
-  }
-  return streak
-}
+type TodayData = { sessions: Session[]; gamesCompleted: number; goalReached: boolean; streak: number }
 
-async function getTodayData() {
-  const date = getToday()
-  try {
-    const [progress, sessions, allDates] = await Promise.all([
-      prisma.dailyProgress.findUnique({ where: { date } }),
-      prisma.gameSession.findMany({ where: { date, completed: true }, orderBy: { createdAt: 'asc' } }),
-      prisma.dailyProgress.findMany({ orderBy: { date: 'asc' }, select: { date: true } }),
-    ])
-    const streak = calcStreak(allDates.map(d => d.date))
-    return { progress, sessions, streak, error: null as string | null }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    console.error('[DB Error]', msg)
-    return { progress: null, sessions: [], streak: 0, error: msg }
-  }
-}
+export default function Home() {
+  const [data, setData] = useState<TodayData | null>(null)
 
-export default async function Home() {
-  const { progress, sessions, streak, error } = await getTodayData()
-  const gamesCompleted = progress?.gamesCompleted ?? 0
-  const goalReached = progress?.goalReached ?? false
-  const today = getToday()
+  useEffect(() => {
+    const { sessions, gamesCompleted, goalReached } = getTodayData()
+    const { streak } = getStats()
+    setData({ sessions, gamesCompleted, goalReached, streak })
+  }, [])
+
+  const today = new Date()
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+  const gamesCompleted = data?.gamesCompleted ?? 0
+  const goalReached = data?.goalReached ?? false
+  const sessions = data?.sessions ?? []
+  const streak = data?.streak ?? 0
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       <NavBar />
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-          <p className="text-red-600 text-lg font-semibold">⚠️ 数据加载失败，请刷新重试</p>
-          <p className="text-red-400 text-xs mt-1 font-mono break-all">{error}</p>
-        </div>
-      )}
-
-      {/* Header */}
       <div className="mb-6">
-        <p className="text-gray-500 text-lg">{formatDate(today)} · {getWeekday()}</p>
+        <p className="text-gray-500 text-lg">{formatDate(dateStr)} · {getWeekday()}</p>
         <h1 className="text-3xl font-bold text-gray-800 mt-1">你好！👋</h1>
         <p className="text-gray-500 mt-1 text-lg">坚持训练，让大脑保持活力</p>
       </div>
 
-      {/* Streak */}
       <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded-2xl p-5 mb-4 text-white shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-5xl">🔥</span>
@@ -74,7 +44,6 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Today Progress */}
       <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm">
         <h2 className="text-xl font-semibold text-gray-700 mb-3">今日训练进度</h2>
         <div className="flex items-center gap-4 mb-3">
@@ -95,10 +64,10 @@ export default async function Home() {
         )}
         {sessions.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {sessions.map(s => {
+            {sessions.map((s, i) => {
               const game = GAME_LIST.find(g => g.type === s.gameType)
               return (
-                <span key={s.id} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-base">
+                <span key={i} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-base">
                   {game?.icon} {game?.name}
                 </span>
               )
@@ -107,7 +76,6 @@ export default async function Home() {
         )}
       </div>
 
-      {/* Start Training */}
       <Link
         href="/games"
         className="block w-full text-center bg-blue-600 text-white text-xl font-bold py-5 rounded-2xl shadow-md"

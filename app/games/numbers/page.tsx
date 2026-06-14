@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/NavBar'
+import { addSession } from '@/lib/storage'
 
 const TOTAL = 20
 
@@ -24,7 +25,6 @@ export default function NumbersGame() {
   const [wrong, setWrong] = useState<number | null>(null)
   const [finished, setFinished] = useState(false)
   const [elapsed, setElapsed] = useState(0)
-  const [saving, setSaving] = useState(false)
   const startRef = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -54,14 +54,9 @@ export default function NumbersGame() {
     }
   }
 
-  async function handleComplete() {
-    setSaving(true)
+  function handleComplete() {
     const score = Math.max(100 - Math.floor(elapsed / 3), 10)
-    await fetch('/api/games/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: 'numbers', gameName: '数字接龙', score }),
-    })
+    addSession('numbers', '数字接龙', score)
     router.push('/games')
   }
 
@@ -108,9 +103,9 @@ export default function NumbersGame() {
           <p className="text-4xl mb-2">🎉</p>
           <p className="text-2xl font-bold text-green-700 mb-1">全部找到了！</p>
           <p className="text-lg text-gray-600 mb-4">用时 {elapsed} 秒</p>
-          <button onClick={handleComplete} disabled={saving}
+          <button onClick={handleComplete}
             className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            {saving ? '保存中...' : '记录并继续 →'}
+            记录并继续 →
           </button>
         </div>
       )}

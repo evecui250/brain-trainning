@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/NavBar'
+import { addSession } from '@/lib/storage'
 
 type Q = { question: string; options: string[]; answer: number }
 
@@ -35,7 +36,6 @@ export default function WordGame() {
   const [score, setScore] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const [done, setDone] = useState(false)
-  const [saving, setSaving] = useState(false)
 
   const q = questions[idx]
 
@@ -53,13 +53,8 @@ export default function WordGame() {
     }, 1200)
   }
 
-  async function handleComplete() {
-    setSaving(true)
-    await fetch('/api/games/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: 'word', gameName: '词语联想', score: Math.round((score / questions.length) * 100) }),
-    })
+  function handleComplete() {
+    addSession('word', '词语联想', Math.round((score / questions.length) * 100))
     router.push('/games')
   }
 
@@ -104,9 +99,9 @@ export default function WordGame() {
           <p className="text-4xl mb-2">🎉</p>
           <p className="text-2xl font-bold text-green-700 mb-1">完成！</p>
           <p className="text-xl text-gray-600 mb-4">答对 {score} / {questions.length} 题</p>
-          <button onClick={handleComplete} disabled={saving}
+          <button onClick={handleComplete}
             className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            {saving ? '保存中...' : '记录并继续 →'}
+            记录并继续 →
           </button>
         </div>
       )}

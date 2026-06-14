@@ -1,24 +1,22 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
-import { getToday, GAME_LIST, DAILY_GOAL } from '@/lib/utils'
+import { GAME_LIST, DAILY_GOAL } from '@/lib/utils'
+import { getTodayData } from '@/lib/storage'
 import NavBar from '@/components/NavBar'
 
-export default async function GamesPage() {
-  const date = getToday()
-  let sessions: { gameType: string }[] = []
-  try {
-    sessions = await prisma.gameSession.findMany({
-      where: { date, completed: true },
-      select: { gameType: true },
-    })
-  } catch {
-    // DB unavailable — show empty progress
-  }
-  const playedTypes = new Set(sessions.map(s => s.gameType))
-  const gamesCompleted = sessions.length
-  const goalReached = gamesCompleted >= DAILY_GOAL
+export default function GamesPage() {
+  const [playedTypes, setPlayedTypes] = useState<Set<string>>(new Set())
+  const [gamesCompleted, setGamesCompleted] = useState(0)
+  const [goalReached, setGoalReached] = useState(false)
+
+  useEffect(() => {
+    const { sessions, gamesCompleted: count, goalReached: reached } = getTodayData()
+    setPlayedTypes(new Set(sessions.map(s => s.gameType)))
+    setGamesCompleted(count)
+    setGoalReached(reached)
+  }, [])
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
@@ -26,11 +24,10 @@ export default async function GamesPage() {
       <h1 className="text-3xl font-bold text-gray-800 mb-2">训练游戏</h1>
       <p className="text-gray-500 text-lg mb-4">选择你喜欢的游戏，目标完成 5 个</p>
 
-      {/* Progress */}
       <div className="bg-blue-50 rounded-2xl p-4 mb-5 flex items-center gap-4">
         <div className="flex-1 bg-blue-100 rounded-full h-4">
           <div
-            className="bg-blue-500 rounded-full h-4"
+            className="bg-blue-500 rounded-full h-4 transition-all"
             style={{ width: `${Math.min((gamesCompleted / DAILY_GOAL) * 100, 100)}%` }}
           />
         </div>
@@ -47,7 +44,6 @@ export default async function GamesPage() {
         </div>
       )}
 
-      {/* Game Grid */}
       <div className="grid grid-cols-2 gap-3">
         {GAME_LIST.map(game => {
           const done = playedTypes.has(game.type)
@@ -59,9 +55,7 @@ export default async function GamesPage() {
                 done ? 'border-green-400 bg-green-50' : 'border-transparent'
               }`}
             >
-              {done && (
-                <span className="absolute top-2 right-2 text-xl">✅</span>
-              )}
+              {done && <span className="absolute top-2 right-2 text-xl">✅</span>}
               <span className="text-4xl">{game.icon}</span>
               <span className="font-bold text-gray-800 text-lg">{game.name}</span>
               <span className="text-gray-500 text-sm">{game.desc}</span>

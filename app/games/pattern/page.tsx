@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/NavBar'
+import { addSession } from '@/lib/storage'
 
 const ROUNDS = 3
 const COLORS = ['#4A90D9', '#52C41A', '#FA8C16', '#F5222D']
@@ -37,7 +38,6 @@ export default function PatternGame() {
   const [input, setInput] = useState<number[]>(() => Array(LEVELS[0].grid * LEVELS[0].grid).fill(-1))
   const [score, setScore] = useState(0)
   const [totalDone, setTotalDone] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [countdown, setCountdown] = useState(LEVELS[0].showSeconds)
   const [selectedColor, setSelectedColor] = useState(0)
   const [lastResult, setLastResult] = useState<'pass' | 'fail' | null>(null)
@@ -98,13 +98,8 @@ export default function PatternGame() {
     }
   }
 
-  async function handleComplete() {
-    setSaving(true)
-    await fetch('/api/games/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameType: 'pattern', gameName: '图案记忆', score: Math.round((score / ROUNDS) * 100) }),
-    })
+  function handleComplete() {
+    addSession('pattern', '图案记忆', Math.round((score / ROUNDS) * 100))
     router.push('/games')
   }
 
@@ -237,9 +232,9 @@ export default function PatternGame() {
           <p className="text-5xl mb-2">🎉</p>
           <p className="text-2xl font-bold text-green-700 mb-1">全部完成！</p>
           <p className="text-xl text-gray-600 mb-4">通过 {score} / {ROUNDS} 轮</p>
-          <button onClick={handleComplete} disabled={saving}
+          <button onClick={handleComplete}
             className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            {saving ? '保存中...' : '记录并继续 →'}
+            记录并继续 →
           </button>
         </div>
       )}
