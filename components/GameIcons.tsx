@@ -101,6 +101,44 @@ export function DrawClockIcon({ className }: P) {
   )
 }
 
+export function ShoppingIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <rect x="4" y="13" width="24" height="16" rx="3" fill="#0d9488"/>
+      <path d="M11 13 Q11 5 16 5 Q21 5 21 13" stroke="#0f766e" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <rect x="9" y="19" width="14" height="2.5" rx="1.2" fill="white" opacity="0.9"/>
+      <rect x="9" y="24" width="9" height="2.5" rx="1.2" fill="white" opacity="0.7"/>
+    </svg>
+  )
+}
+
+export function ReactionIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <circle cx="16" cy="16" r="14" fill="#d9f99d"/>
+      <circle cx="16" cy="16" r="9"  fill="#bef264"/>
+      <circle cx="16" cy="16" r="4"  fill="#84cc16"/>
+    </svg>
+  )
+}
+
+export function MapDirIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <line x1="2" y1="9"  x2="30" y2="9"  stroke="#bae6fd" strokeWidth="0.8"/>
+      <line x1="2" y1="16" x2="30" y2="16" stroke="#bae6fd" strokeWidth="0.8"/>
+      <line x1="2" y1="23" x2="30" y2="23" stroke="#bae6fd" strokeWidth="0.8"/>
+      <line x1="9"  y1="2" x2="9"  y2="30" stroke="#bae6fd" strokeWidth="0.8"/>
+      <line x1="16" y1="2" x2="16" y2="30" stroke="#bae6fd" strokeWidth="0.8"/>
+      <line x1="23" y1="2" x2="23" y2="30" stroke="#bae6fd" strokeWidth="0.8"/>
+      <circle cx="9" cy="23" r="4" fill="#f59e0b"/>
+      <line x1="9" y1="23" x2="23" y2="23" stroke="#0284c7" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="23" y1="23" x2="23" y2="9" stroke="#0284c7" strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="23" cy="9" r="4" fill="#22c55e"/>
+    </svg>
+  )
+}
+
 export function GameIcon({ type, className = 'w-6 h-6' }: { type: string; className?: string }) {
   const p = { className }
   switch (type) {
@@ -111,6 +149,9 @@ export function GameIcon({ type, className = 'w-6 h-6' }: { type: string; classN
     case 'color':     return <ColorMemIcon {...p} />
     case 'math':      return <MathIcon {...p} />
     case 'drawclock': return <DrawClockIcon {...p} />
+    case 'shopping':  return <ShoppingIcon {...p} />
+    case 'reaction':  return <ReactionIcon {...p} />
+    case 'mapdir':    return <MapDirIcon {...p} />
     default:          return null
   }
 }
