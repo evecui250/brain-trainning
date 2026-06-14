@@ -7,62 +7,68 @@ import { getTodayData } from '@/lib/storage'
 import NavBar from '@/components/NavBar'
 
 export default function GamesPage() {
-  const [playedTypes, setPlayedTypes] = useState<Set<string>>(new Set())
-  const [gamesCompleted, setGamesCompleted] = useState(0)
-  const [goalReached, setGoalReached] = useState(false)
+  const [done, setDone] = useState<Set<string>>(new Set())
+  const [count, setCount] = useState(0)
 
   useEffect(() => {
-    const { sessions, gamesCompleted: count, goalReached: reached } = getTodayData()
-    setPlayedTypes(new Set(sessions.map(s => s.gameType)))
-    setGamesCompleted(count)
-    setGoalReached(reached)
+    const { sessions, gamesCompleted } = getTodayData()
+    setDone(new Set(sessions.map(s => s.gameType)))
+    setCount(gamesCompleted)
   }, [])
 
-  return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <NavBar />
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">训练游戏</h1>
-      <p className="text-gray-500 text-lg mb-4">选择你喜欢的游戏，目标完成 5 个</p>
+  const pct = Math.min(count / DAILY_GOAL * 100, 100)
 
-      <div className="bg-blue-50 rounded-2xl p-4 mb-5 flex items-center gap-4">
-        <div className="flex-1 bg-blue-100 rounded-full h-4">
-          <div
-            className="bg-blue-500 rounded-full h-4 transition-all"
-            style={{ width: `${Math.min((gamesCompleted / DAILY_GOAL) * 100, 100)}%` }}
-          />
+  return (
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
+      <NavBar />
+      <h1 className="text-2xl font-bold text-slate-800 mb-1">训练游戏</h1>
+      <p className="text-slate-400 text-sm mb-4">完成 {DAILY_GOAL} 个游戏为今日目标</p>
+
+      {/* Progress */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 bg-slate-100 rounded-full h-2">
+          <div className="bg-indigo-500 rounded-full h-2 transition-all" style={{ width: `${pct}%` }} />
         </div>
-        <span className="text-xl font-bold text-blue-600 whitespace-nowrap">{gamesCompleted}/{DAILY_GOAL}</span>
+        <span className="text-indigo-600 font-bold text-base whitespace-nowrap">{count}/{DAILY_GOAL}</span>
       </div>
 
-      {goalReached && (
-        <div className="bg-green-100 border border-green-300 rounded-2xl p-4 mb-5 text-center">
-          <p className="text-2xl">🎉</p>
-          <p className="text-green-700 font-bold text-xl">今日训练目标已完成！</p>
-          <Link href="/stats" className="block mt-3 bg-green-500 text-white text-lg font-semibold py-3 rounded-xl">
-            查看训练记录 →
-          </Link>
-        </div>
-      )}
-
+      {/* Game grid */}
       <div className="grid grid-cols-2 gap-3">
         {GAME_LIST.map(game => {
-          const done = playedTypes.has(game.type)
+          const completed = done.has(game.type)
           return (
             <Link
               key={game.type}
               href={`/games/${game.type}`}
-              className={`relative bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2 text-center border-2 transition-all ${
-                done ? 'border-green-400 bg-green-50' : 'border-transparent'
+              className={`bg-white rounded-2xl p-4 shadow-sm border flex flex-col gap-2 transition-all active:scale-[0.98] ${
+                completed ? 'border-emerald-300 bg-emerald-50' : 'border-slate-100'
               }`}
             >
-              {done && <span className="absolute top-2 right-2 text-xl">✅</span>}
-              <span className="text-4xl">{game.icon}</span>
-              <span className="font-bold text-gray-800 text-lg">{game.name}</span>
-              <span className="text-gray-500 text-sm">{game.desc}</span>
+              <div className="flex items-center justify-between">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold ${game.bg} ${game.fg}`}>
+                  {game.name[0]}
+                </div>
+                {completed && (
+                  <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">✓</span>
+                  </span>
+                )}
+              </div>
+              <p className="font-bold text-slate-800 text-base">{game.name}</p>
+              <p className="text-slate-400 text-xs leading-tight">{game.desc}</p>
             </Link>
           )
         })}
       </div>
+
+      {count >= DAILY_GOAL && (
+        <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
+          <p className="text-emerald-700 font-bold text-lg">今日目标已完成</p>
+          <Link href="/stats" className="block mt-2 text-emerald-600 text-base underline">
+            查看训练记录
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

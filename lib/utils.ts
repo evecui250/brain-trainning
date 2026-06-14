@@ -13,12 +13,13 @@ export function getWeekday(): string {
 }
 
 export const GAME_LIST = [
-  { type: 'memory', name: '翻牌记忆', icon: '🃏', desc: '找出相同的牌' },
-  { type: 'numbers', name: '数字接龙', icon: '🔢', desc: '按顺序点击数字' },
-  { type: 'clock', name: '认识时钟', icon: '🕐', desc: '读出时钟时间' },
-  { type: 'pattern', name: '图案记忆', icon: '🎨', desc: '记住并复现图案' },
-  { type: 'word', name: '词语联想', icon: '💬', desc: '选出相关词语' },
-  { type: 'math', name: '简单计算', icon: '➕', desc: '口算加减法' },
+  { type: 'memory',    name: '翻牌记忆', desc: '找出相同的牌',     bg: 'bg-blue-100',    fg: 'text-blue-600'    },
+  { type: 'numbers',   name: '数字接龙', desc: '按顺序点击数字',   bg: 'bg-emerald-100', fg: 'text-emerald-600' },
+  { type: 'clock',     name: '认识时钟', desc: '读出时钟时间',     bg: 'bg-amber-100',   fg: 'text-amber-700'   },
+  { type: 'pattern',   name: '图案记忆', desc: '记住并复现图案',   bg: 'bg-violet-100',  fg: 'text-violet-600'  },
+  { type: 'color',     name: '颜色记忆', desc: '找出相同的颜色',   bg: 'bg-rose-100',    fg: 'text-rose-600'    },
+  { type: 'math',      name: '简单计算', desc: '口算加减法',       bg: 'bg-cyan-100',    fg: 'text-cyan-700'    },
+  { type: 'drawclock', name: '画时钟',   desc: '在表盘上画出时间', bg: 'bg-orange-100',  fg: 'text-orange-600'  },
 ] as const
 
 export type GameType = typeof GAME_LIST[number]['type']

@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import NavBar from '@/components/NavBar'
 import { addSession } from '@/lib/storage'
 
 const ROUNDS = 10
@@ -11,8 +10,6 @@ type Problem = { a: number; b: number; op: '+' | '-'; answer: number }
 type State = 'waiting' | 'correct' | 'wrong'
 
 function makeProblem(level: number): Problem {
-  // level 0: single digits (2-12), level 1: 2-digit + 1-digit (10-40),
-  // level 2: 2-digit + 2-digit (15-60), level 3: harder 2-digit (25-99)
   const ranges: [number, number][] = [[2, 12], [10, 40], [15, 60], [25, 99]]
   const [min, max] = ranges[Math.min(level, 3)]
   const rand = (lo: number, hi: number) => Math.floor(Math.random() * (hi - lo + 1)) + lo
@@ -69,89 +66,86 @@ export default function MathGame() {
     }, 1200)
   }, [state, input, p.answer, idx])
 
-  function handleComplete() {
-    addSession('math', '简单计算', score * 10)
-    router.push('/games')
+  if (done) {
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
+        <div className="flex items-center gap-3 mb-8">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">简单计算</h1>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <p className="text-slate-500 text-base mb-2">最终得分</p>
+          <p className="text-7xl font-bold text-indigo-600 mb-1">{score * 10}</p>
+          <p className="text-slate-400 text-base mb-2">答对 {score} / {ROUNDS} 题</p>
+          <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
+          <button
+            onClick={() => { addSession('math', '简单计算', score * 10); router.push('/games') }}
+            className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
+          >
+            记录并继续
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const inputColor = state === 'correct'
-    ? 'bg-green-100 border-green-500 text-green-700'
+    ? 'bg-emerald-50 border-emerald-400 text-emerald-700'
     : state === 'wrong'
-    ? 'bg-red-100 border-red-400 text-red-700'
-    : 'bg-white border-gray-300 text-gray-800'
+    ? 'bg-red-50 border-red-300 text-red-600'
+    : 'bg-white border-slate-200 text-slate-800'
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <NavBar />
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => router.push('/games')} className="text-3xl">←</button>
-        <h1 className="text-2xl font-bold">➕ 简单计算</h1>
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">简单计算</h1>
+        </div>
+        <span className="text-indigo-600 font-bold text-sm">{idx + 1}/{ROUNDS}</span>
       </div>
-      <p className="text-gray-500 text-lg mb-4">计算结果，用键盘输入答案</p>
 
-      {!done ? (
-        <div>
-          {/* Progress */}
-          <div className="flex justify-between text-lg font-semibold mb-4 bg-white rounded-xl p-3 shadow-sm">
-            <span>第 {idx + 1} / {ROUNDS} 题</span>
-            <span>得分：<b className="text-blue-600">{score}</b></span>
-          </div>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-4 text-center">
+        <p className="text-slate-400 text-sm mb-2">计算下面的算式</p>
+        <p className="text-5xl font-bold text-slate-800 tracking-widest">
+          {p.a} {p.op} {p.b} =
+        </p>
+      </div>
 
-          {/* Problem */}
-          <div className="bg-white rounded-2xl p-8 shadow-sm mb-4 text-center">
-            <p className="text-5xl font-bold text-gray-800 tracking-widest">
-              {p.a} {p.op} {p.b} =
-            </p>
-          </div>
+      <div className={`border-2 rounded-2xl p-4 mb-4 text-center text-4xl font-bold min-h-[68px] transition-all ${inputColor}`}>
+        {state === 'correct' && '答对了'}
+        {state === 'wrong' && `正确：${p.answer}`}
+        {state === 'waiting' && (input || <span className="text-slate-200">?</span>)}
+      </div>
 
-          {/* Answer display */}
-          <div className={`border-2 rounded-2xl p-4 mb-4 text-center text-4xl font-bold min-h-[72px] transition-all ${inputColor}`}>
-            {state === 'correct' && '✅ 答对了！'}
-            {state === 'wrong' && `❌ 正确答案：${p.answer}`}
-            {state === 'waiting' && (input || <span className="text-gray-300">?</span>)}
-          </div>
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '⌫', ''].map((k, i) => (
+          k === '' ? (
+            <div key={i} />
+          ) : (
+            <button
+              key={k}
+              onClick={() => pressKey(k)}
+              disabled={state !== 'waiting'}
+              className={`py-5 rounded-2xl text-2xl font-bold shadow-sm transition-all active:scale-95 ${
+                k === '⌫'
+                  ? 'bg-slate-100 text-slate-600'
+                  : 'bg-white text-slate-800 border border-slate-200'
+              } disabled:opacity-40`}
+            >
+              {k}
+            </button>
+          )
+        ))}
+      </div>
 
-          {/* Numpad */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '⌫', ''].map((k, i) => (
-              k === '' ? (
-                <div key={i} />
-              ) : (
-                <button
-                  key={k}
-                  onClick={() => pressKey(k)}
-                  disabled={state !== 'waiting'}
-                  className={`py-5 rounded-2xl text-2xl font-bold shadow-sm transition-all active:scale-95 ${
-                    k === '⌫'
-                      ? 'bg-gray-200 text-gray-700'
-                      : 'bg-white text-gray-800 border border-gray-200'
-                  } disabled:opacity-40`}
-                >
-                  {k}
-                </button>
-              )
-            ))}
-          </div>
-
-          <button
-            onClick={submit}
-            disabled={state !== 'waiting' || input === ''}
-            className="w-full bg-blue-500 text-white text-xl font-bold py-5 rounded-2xl disabled:opacity-40 transition-all active:scale-98"
-          >
-            确认答案 ✓
-          </button>
-        </div>
-      ) : (
-        <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-5 text-center">
-          <p className="text-5xl mb-2">🎉</p>
-          <p className="text-2xl font-bold text-green-700 mb-1">完成！</p>
-          <p className="text-xl text-gray-600 mb-4">答对 {score} / {ROUNDS} 题</p>
-          <button onClick={handleComplete}
-            className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            记录并继续 →
-          </button>
-        </div>
-      )}
+      <button
+        onClick={submit}
+        disabled={state !== 'waiting' || input === ''}
+        className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl disabled:opacity-40 transition-all active:scale-[0.98]"
+      >
+        确认
+      </button>
     </div>
   )
 }

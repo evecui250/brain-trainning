@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import NavBar from '@/components/NavBar'
 import { addSession } from '@/lib/storage'
 
 // ─── SVG card faces ────────────────────────────────────────────────────────
@@ -25,13 +24,10 @@ function SunSVG() {
 }
 
 function MoonSVG() {
-  // Crescent: large circle with a smaller overlapping "bite" in bg color
   return (
     <svg viewBox="0 0 60 60" width="52" height="52">
       <circle cx="28" cy="30" r="20" fill="#818CF8" />
-      {/* bite-out circle matches card face background */}
       <circle cx="37" cy="24" r="17" fill="#EDE9FE" />
-      {/* small stars */}
       <circle cx="46" cy="12" r="2.5" fill="#818CF8" />
       <circle cx="52" cy="22" r="1.8" fill="#818CF8" />
       <circle cx="49" cy="32" r="1.5" fill="#818CF8" />
@@ -40,7 +36,6 @@ function MoonSVG() {
 }
 
 function FlowerSVG() {
-  // 5 petal circles + yellow center
   const petals = [0, 72, 144, 216, 288].map(a => ({
     cx: 30 + 13 * Math.sin((a * Math.PI) / 180),
     cy: 30 - 13 * Math.cos((a * Math.PI) / 180),
@@ -68,20 +63,14 @@ function HeartSVG() {
 }
 
 function FishSVG() {
-  // Body ellipse + tail triangle + eye
   return (
     <svg viewBox="0 0 60 60" width="52" height="52">
-      {/* tail */}
       <polygon points="14,16 14,44 4,30" fill="#0EA5E9" />
-      {/* body */}
       <ellipse cx="34" cy="30" rx="18" ry="12" fill="#38BDF8" />
-      {/* fin */}
       <polygon points="28,18 42,18 35,24" fill="#0EA5E9" />
-      {/* eye */}
       <circle cx="44" cy="27" r="4" fill="white" />
       <circle cx="45" cy="27" r="2.2" fill="#0F172A" />
       <circle cx="46" cy="26" r="0.8" fill="white" />
-      {/* mouth */}
       <path d="M 50 31 Q 53 33 50 35" fill="none" stroke="#0369A1" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   )
@@ -108,7 +97,7 @@ function StarSVG() {
 type CardDef = {
   key: string
   label: string
-  bg: string        // card face background
+  bg: string
   render: () => React.ReactNode
 }
 
@@ -120,8 +109,6 @@ const CARD_DEFS: CardDef[] = [
   { key: 'fish',   label: '鱼儿', bg: '#E0F2FE', render: () => <FishSVG /> },
   { key: 'star',   label: '星星', bg: '#FFFBEB', render: () => <StarSVG /> },
 ]
-
-// ─── Game logic ────────────────────────────────────────────────────────────
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -189,27 +176,42 @@ export default function MemoryGame() {
     }
   }, [selected])
 
-  function handleComplete() {
+  if (done) {
     const score = Math.max(100 - (attempts - CARD_DEFS.length) * 5, 10)
-    addSession('memory', '翻牌记忆', score)
-    router.push('/games')
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
+        <div className="flex items-center gap-3 mb-8">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">翻牌记忆</h1>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <p className="text-slate-500 text-base mb-2">最终得分</p>
+          <p className="text-7xl font-bold text-indigo-600 mb-1">{score}</p>
+          <p className="text-slate-400 text-base mb-2">翻牌 {attempts} 次完成</p>
+          <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
+          <button
+            onClick={() => { addSession('memory', '翻牌记忆', score); router.push('/games') }}
+            className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
+          >
+            记录并继续
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <NavBar />
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => router.push('/games')} className="text-3xl">←</button>
-        <h1 className="text-2xl font-bold">🃏 翻牌记忆</h1>
-      </div>
-      <p className="text-gray-500 text-lg mb-4">翻开两张牌，找出所有相同的图案！</p>
-
-      <div className="flex justify-between text-lg font-semibold mb-4 bg-white rounded-xl p-3 shadow-sm">
-        <span>已匹配：<b className="text-green-600">{matched}</b> / {CARD_DEFS.length}</span>
-        <span>翻牌次数：{attempts}</span>
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">翻牌记忆</h1>
+        </div>
+        <span className="text-slate-400 text-sm">{matched}/{CARD_DEFS.length} 对</span>
       </div>
 
-      {/* 3 × 4 grid */}
+      <p className="text-slate-500 text-sm mb-4 text-center">翻开两张牌，找出所有相同的图案</p>
+
       <div className="grid grid-cols-3 gap-3 mb-4">
         {cards.map(card => {
           const def = CARD_DEFS.find(d => d.key === card.defKey)!
@@ -221,41 +223,31 @@ export default function MemoryGame() {
               onClick={() => handleFlip(card.id)}
               disabled={card.matched || card.flipped}
               style={isVisible ? { backgroundColor: def.bg } : {}}
-              className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 shadow-md transition-all duration-300 ${
+              className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm transition-all duration-300 ${
                 card.matched
-                  ? 'border-2 border-green-400 opacity-70'
+                  ? 'border-2 border-emerald-300 opacity-70'
                   : isVisible
-                  ? 'border-2 border-blue-300 scale-105'
-                  : 'bg-blue-500'
+                  ? 'border-2 border-indigo-200 scale-105'
+                  : 'bg-indigo-500'
               }`}
             >
               {isVisible ? (
                 <>
                   {def.render()}
-                  <span className="text-sm font-semibold text-gray-600">{def.label}</span>
+                  <span className="text-xs font-semibold text-slate-600">{def.label}</span>
                   {card.matched && (
-                    <span className="absolute top-1 right-2 text-green-500 text-lg">✓</span>
+                    <span className="absolute top-1 right-2 text-emerald-500 text-base font-bold">✓</span>
                   )}
                 </>
               ) : (
-                <span className="text-4xl text-white opacity-60">?</span>
+                <span className="text-4xl text-white opacity-60 font-light">?</span>
               )}
             </button>
           )
         })}
       </div>
 
-      {done && (
-        <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-5 text-center">
-          <p className="text-4xl mb-2">🎉</p>
-          <p className="text-2xl font-bold text-green-700 mb-1">全部配对成功！</p>
-          <p className="text-lg text-gray-600 mb-4">共翻牌 {attempts} 次</p>
-          <button onClick={handleComplete}
-            className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            记录并继续 →
-          </button>
-        </div>
-      )}
+      <div className="text-center text-sm text-slate-400">翻牌次数：{attempts}</div>
     </div>
   )
 }

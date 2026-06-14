@@ -20,15 +20,8 @@ function fmtFull(d: string) {
   return `${y}年${parseInt(m)}月${parseInt(day)}日`
 }
 
-function scoreLabel(gameType: string, score: number): string {
-  switch (gameType) {
-    case 'math':    return `${Math.round(score / 10)}/10 答对`
-    case 'clock':   return `${Math.round(score / 20)}/5 答对`
-    case 'word':    return `${score}% 正确`
-    case 'pattern': return `${score}% 通过`
-    case 'numbers': return score > 0 ? `${score}秒` : '已完成'
-    default:        return score > 0 ? `${score}分` : '已完成'
-  }
+function scoreLabel(score: number): string {
+  return `${score} 分`
 }
 
 export default function StatsPage() {
@@ -62,7 +55,7 @@ export default function StatsPage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-24">
       <NavBar />
-      <h1 className="text-3xl font-bold text-gray-800 mb-5">📊 训练记录</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-5">训练记录</h1>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
@@ -99,8 +92,7 @@ export default function StatsPage() {
       <h2 className="text-2xl font-bold text-gray-800 mb-3">每日详细记录</h2>
 
       {sortedDates.length === 0 ? (
-        <div className="bg-white rounded-2xl p-8 text-center text-gray-400 text-xl shadow-sm">
-          <p className="text-5xl mb-3">📋</p>
+        <div className="bg-white rounded-2xl p-8 text-center text-slate-400 text-xl shadow-sm">
           <p>还没有训练记录</p>
           <p className="text-base mt-1">完成游戏后这里会显示详细记录</p>
         </div>
@@ -114,8 +106,8 @@ export default function StatsPage() {
                 <div className={`px-4 py-3 flex items-center justify-between ${prog?.goalReached ? 'bg-green-50' : 'bg-gray-50'}`}>
                   <span className="text-lg font-semibold text-gray-700">{fmtFull(date)}</span>
                   {prog?.goalReached
-                    ? <span className="text-green-600 font-semibold text-base">✅ 目标达成</span>
-                    : <span className="text-gray-400 text-base">{daySessions.length}/{DAILY_GOAL} 个游戏</span>
+                    ? <span className="text-emerald-600 font-semibold text-base">目标达成</span>
+                    : <span className="text-slate-400 text-base">{daySessions.length}/{DAILY_GOAL} 个游戏</span>
                   }
                 </div>
                 <div className="divide-y divide-gray-50">
@@ -124,11 +116,13 @@ export default function StatsPage() {
                     return (
                       <div key={i} className="flex items-center justify-between px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{def?.icon ?? '🎮'}</span>
-                          <span className="text-lg text-gray-700">{s.gameName}</span>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${def?.bg ?? 'bg-slate-100'} ${def?.fg ?? 'text-slate-600'}`}>
+                            {s.gameName[0]}
+                          </div>
+                          <span className="text-base text-slate-700">{s.gameName}</span>
                         </div>
-                        <span className="text-base font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                          {scoreLabel(s.gameType, s.score)}
+                        <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                          {scoreLabel(s.score)}
                         </span>
                       </div>
                     )

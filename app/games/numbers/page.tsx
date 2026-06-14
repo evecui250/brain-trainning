@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import NavBar from '@/components/NavBar'
 import { addSession } from '@/lib/storage'
 
 const TOTAL = 20
@@ -18,7 +17,6 @@ function shuffle(n: number): number[] {
 
 export default function NumbersGame() {
   const router = useRouter()
-  // Grid order: fixed random positions, but values are shuffled
   const [order] = useState(() => shuffle(TOTAL))
   const [next, setNext] = useState(1)
   const [done, setDone] = useState<Set<number>>(new Set())
@@ -48,34 +46,53 @@ export default function NumbersGame() {
         setNext(num + 1)
       }
     } else {
-      // Wrong tap — flash red briefly
       setWrong(num)
       setTimeout(() => setWrong(null), 600)
     }
   }
 
-  function handleComplete() {
+  if (finished) {
     const score = Math.max(100 - Math.floor(elapsed / 3), 10)
-    addSession('numbers', '数字接龙', score)
-    router.push('/games')
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
+        <div className="flex items-center gap-3 mb-8">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">数字接龙</h1>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <p className="text-slate-500 text-base mb-2">最终得分</p>
+          <p className="text-7xl font-bold text-indigo-600 mb-1">{score}</p>
+          <p className="text-slate-400 text-base mb-2">用时 {elapsed} 秒</p>
+          <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
+          <button
+            onClick={() => { addSession('numbers', '数字接龙', score); router.push('/games') }}
+            className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
+          >
+            记录并继续
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <NavBar />
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => router.push('/games')} className="text-3xl">←</button>
-        <h1 className="text-2xl font-bold">🔢 数字接龙</h1>
-      </div>
-      <p className="text-gray-500 text-lg mb-2">从 1 开始，按顺序找到并点击每个数字！</p>
-
-      <div className="flex justify-between text-lg font-semibold mb-4 bg-white rounded-xl p-3 shadow-sm">
-        <span>已完成：<b className="text-green-600">{done.size}</b> / {TOTAL}</span>
-        <span>用时：{elapsed} 秒</span>
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">数字接龙</h1>
+        </div>
+        <span className="text-slate-400 text-sm">{elapsed} 秒</span>
       </div>
 
-      {/* 4 × 5 grid of shuffled numbers — no highlighting */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <p className="text-slate-500 text-sm mb-3 text-center">从 1 开始，按顺序点击每个数字</p>
+
+      <div className="flex justify-between text-sm text-slate-400 mb-3 px-1">
+        <span>已完成 <b className="text-emerald-600">{done.size}</b> / {TOTAL}</span>
+        <span>下一个：<b className="text-indigo-600">{next}</b></span>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
         {order.map(num => {
           const isDone = done.has(num)
           const isWrong = wrong === num
@@ -84,12 +101,12 @@ export default function NumbersGame() {
               key={num}
               onClick={() => handleTap(num)}
               disabled={isDone}
-              className={`h-16 rounded-2xl text-2xl font-bold transition-all select-none ${
+              className={`h-14 rounded-2xl text-xl font-bold transition-all select-none ${
                 isDone
-                  ? 'bg-green-100 text-green-500 opacity-50 line-through'
+                  ? 'bg-emerald-50 text-emerald-400 opacity-50'
                   : isWrong
-                  ? 'bg-red-200 text-red-600 scale-95'
-                  : 'bg-white text-gray-800 shadow-sm active:scale-95'
+                  ? 'bg-red-100 text-red-500 scale-95'
+                  : 'bg-white text-slate-800 shadow-sm border border-slate-100 active:scale-95'
               }`}
             >
               {isDone ? '✓' : num}
@@ -97,18 +114,6 @@ export default function NumbersGame() {
           )
         })}
       </div>
-
-      {finished && (
-        <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-5 text-center">
-          <p className="text-4xl mb-2">🎉</p>
-          <p className="text-2xl font-bold text-green-700 mb-1">全部找到了！</p>
-          <p className="text-lg text-gray-600 mb-4">用时 {elapsed} 秒</p>
-          <button onClick={handleComplete}
-            className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            记录并继续 →
-          </button>
-        </div>
-      )}
     </div>
   )
 }

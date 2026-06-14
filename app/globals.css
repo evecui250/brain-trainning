@@ -1,25 +1,15 @@
 @import "tailwindcss";
 
-@theme inline {
-  --color-primary: #4A90D9;
-  --color-primary-light: #EBF4FF;
-  --color-success: #52C41A;
-  --color-success-light: #F6FFED;
-  --color-warm: #FA8C16;
-  --color-warm-light: #FFF7E6;
-  --color-bg: #F7F8FA;
-}
-
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background-color: #F7F8FA;
-  color: #1A1A2E;
+  background-color: #f8fafc;
+  color: #1e293b;
   font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
     "WenQuanYi Micro Hei", sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.6;
 }
 

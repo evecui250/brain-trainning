@@ -4,31 +4,30 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const tabs = [
-  { href: '/', label: '首页', icon: '🏠' },
-  { href: '/games', label: '训练', icon: '🎮' },
-  { href: '/stats', label: '记录', icon: '📊' },
+  { href: '/', label: '首页' },
+  { href: '/games', label: '训练' },
+  { href: '/stats', label: '记录' },
 ]
 
 export default function NavBar() {
   const pathname = usePathname()
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
-      <div className="flex">
-        {tabs.map(tab => {
-          const isActive = tab.href === '/'
-            ? pathname === '/'
-            : pathname.startsWith(tab.href)
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50">
+      <div className="max-w-lg mx-auto flex">
+        {tabs.map(({ href, label }) => {
+          const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
           return (
             <Link
-              key={tab.href}
-              href={tab.href}
-              className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-sm font-medium transition-colors ${
-                isActive ? 'text-blue-600' : 'text-gray-500'
+              key={href}
+              href={href}
+              className={`flex-1 py-4 text-center text-lg font-semibold tracking-wide transition-colors ${
+                active ? 'text-indigo-600' : 'text-slate-400'
               }`}
             >
-              <span className="text-2xl">{tab.icon}</span>
-              <span>{tab.label}</span>
+              {active && (
+                <span className="block w-6 h-0.5 bg-indigo-600 rounded-full mx-auto mb-1" />
+              )}
+              {label}
             </Link>
           )
         })}

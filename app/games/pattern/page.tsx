@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import NavBar from '@/components/NavBar'
 import { addSession } from '@/lib/storage'
 
 const ROUNDS = 3
-const COLORS = ['#4A90D9', '#52C41A', '#FA8C16', '#F5222D']
-const COLOR_NAMES = ['蓝色', '绿色', '橙色', '红色']
+const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444']
+const COLOR_NAMES = ['蓝', '绿', '橙', '红']
 
 type Difficulty = { grid: number; litCount: number; showSeconds: number }
 const LEVELS: Difficulty[] = [
@@ -64,11 +63,7 @@ export default function PatternGame() {
     if (phase !== 'input') return
     setInput(prev => {
       const next = [...prev]
-      if (next[i] === selectedColor) {
-        next[i] = -1
-      } else {
-        next[i] = selectedColor
-      }
+      next[i] = next[i] === selectedColor ? -1 : selectedColor
       return next
     })
   }, [phase, selectedColor])
@@ -77,8 +72,7 @@ export default function PatternGame() {
     let correct = 0
     const total = currentLevel.grid * currentLevel.grid
     pattern.forEach((p, i) => { if (p === input[i]) correct++ })
-    const pct = correct / total
-    const pass = pct >= 0.75
+    const pass = correct / total >= 0.75
     if (pass) setScore(s => s + 1)
     setLastResult(pass ? 'pass' : 'fail')
     setPhase('result')
@@ -98,145 +92,137 @@ export default function PatternGame() {
     }
   }
 
-  function handleComplete() {
-    addSession('pattern', '图案记忆', Math.round((score / ROUNDS) * 100))
-    router.push('/games')
+  if (totalDone) {
+    const finalScore = Math.round((score / ROUNDS) * 100)
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
+        <div className="flex items-center gap-3 mb-8">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">图案记忆</h1>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <p className="text-slate-500 text-base mb-2">最终得分</p>
+          <p className="text-7xl font-bold text-indigo-600 mb-1">{finalScore}</p>
+          <p className="text-slate-400 text-base mb-2">通过 {score} / {ROUNDS} 轮</p>
+          <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
+          <button
+            onClick={() => { addSession('pattern', '图案记忆', finalScore); router.push('/games') }}
+            className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
+          >
+            记录并继续
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  const gridCols = currentLevel.grid === 3 ? 'grid-cols-3' : 'grid-cols-4'
-
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <NavBar />
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => router.push('/games')} className="text-3xl">←</button>
-        <h1 className="text-2xl font-bold">🎨 图案记忆</h1>
-      </div>
-      <p className="text-gray-500 text-lg mb-2">记住彩色格子的位置和颜色，然后复现它！</p>
-      <div className="text-lg font-semibold mb-4">
-        第 {round + 1} / {ROUNDS} 轮 · 得分：{score}/{round}
+    <div className="max-w-lg mx-auto px-4 pt-6 pb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+          <h1 className="text-xl font-bold text-slate-800">图案记忆</h1>
+        </div>
+        <span className="text-slate-400 text-sm">第 {round + 1}/{ROUNDS} 轮</span>
       </div>
 
       {phase === 'show' && (
-        <div>
-          <div className="bg-yellow-100 rounded-xl p-3 text-center text-xl font-bold text-yellow-700 mb-4">
-            👀 记住图案！{countdown} 秒后隐藏
+        <>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center text-amber-700 font-semibold mb-4">
+            记住图案 — {countdown} 秒后隐藏
           </div>
-          <div className={`grid gap-3 mx-auto max-w-xs`} style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)` }}>
-            {pattern.map((c, i) => (
-              <div
-                key={i}
-                className="aspect-square rounded-xl shadow-sm"
-                style={{ background: c >= 0 ? COLORS[c] : '#E5E7EB' }}
-              />
-            ))}
+          <div className="flex justify-center">
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)`, maxWidth: currentLevel.grid === 3 ? 240 : 300 }}>
+              {pattern.map((c, i) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-xl shadow-sm"
+                  style={{ background: c >= 0 ? COLORS[c] : '#f1f5f9', width: currentLevel.grid === 3 ? 72 : 66 }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {phase === 'input' && (
-        <div>
-          <div className="bg-blue-100 rounded-xl p-3 text-center text-xl font-bold text-blue-700 mb-4">
-            ✏️ 现在复现图案！点击格子涂色
+        <>
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-center text-indigo-700 font-semibold mb-4">
+            复现图案 — 点击格子涂色
           </div>
 
-          {/* Color picker */}
-          <div className="flex gap-3 mb-4 justify-center">
+          <div className="flex gap-2 mb-4 justify-center">
             {COLORS.map((c, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedColor(i)}
-                className={`flex flex-col items-center gap-1 transition-all`}
+                className="flex flex-col items-center gap-1"
               >
                 <div
-                  className={`w-12 h-12 rounded-full border-4 transition-all ${selectedColor === i ? 'border-gray-800 scale-110 shadow-md' : 'border-transparent'}`}
+                  className={`w-11 h-11 rounded-full border-4 transition-all ${selectedColor === i ? 'border-slate-700 scale-110 shadow-md' : 'border-transparent'}`}
                   style={{ background: c }}
                 />
-                <span className="text-xs text-gray-600">{COLOR_NAMES[i]}</span>
+                <span className="text-xs text-slate-500">{COLOR_NAMES[i]}</span>
               </button>
             ))}
-            <button
-              onClick={() => setSelectedColor(-2)}
-              className="flex flex-col items-center gap-1"
-            >
-              <div className={`w-12 h-12 rounded-full border-4 bg-gray-200 flex items-center justify-center text-gray-500 font-bold ${selectedColor === -2 ? 'border-gray-800 scale-110' : 'border-transparent'}`}>
+            <button onClick={() => setSelectedColor(-2)} className="flex flex-col items-center gap-1">
+              <div className={`w-11 h-11 rounded-full border-4 bg-slate-100 flex items-center justify-center text-slate-500 text-sm font-bold ${selectedColor === -2 ? 'border-slate-700 scale-110' : 'border-transparent'}`}>
                 ✕
               </div>
-              <span className="text-xs text-gray-600">清除</span>
+              <span className="text-xs text-slate-500">清除</span>
             </button>
           </div>
 
-          <div className={`grid gap-3 mx-auto max-w-xs mb-5`} style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)` }}>
-            {input.map((c, i) => (
-              <button
-                key={i}
-                onClick={() => toggleCell(i)}
-                className="aspect-square rounded-xl border-2 border-gray-200 transition-all shadow-sm"
-                style={{ background: c >= 0 ? COLORS[c] : '#F9FAFB' }}
-              />
-            ))}
+          <div className="flex justify-center mb-4">
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)`, maxWidth: currentLevel.grid === 3 ? 240 : 300 }}>
+              {input.map((c, i) => (
+                <button
+                  key={i}
+                  onClick={() => toggleCell(i)}
+                  className="aspect-square rounded-xl border-2 border-slate-200 shadow-sm transition-all"
+                  style={{ background: c >= 0 ? COLORS[c] : '#f8fafc', width: currentLevel.grid === 3 ? 72 : 66 }}
+                />
+              ))}
+            </div>
           </div>
 
-          <button
-            onClick={check}
-            className="w-full bg-blue-500 text-white text-xl font-bold py-4 rounded-xl"
-          >
-            提交答案 ✓
+          <button onClick={check} className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl">
+            提交答案
           </button>
-        </div>
+        </>
       )}
 
       {phase === 'result' && !totalDone && (
-        <div>
-          <div className={`rounded-2xl p-4 mb-4 text-center ${lastResult === 'pass' ? 'bg-green-100' : 'bg-orange-100'}`}>
-            <p className="text-3xl mb-1">{lastResult === 'pass' ? '🎉 答对了！' : '💪 加油！'}</p>
+        <>
+          <div className={`rounded-xl p-3 mb-4 text-center font-semibold ${lastResult === 'pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
+            {lastResult === 'pass' ? '答对了' : '加油'}
           </div>
-          <p className="text-xl font-bold text-center mb-4 text-gray-700">对比结果</p>
           <div className="grid grid-cols-2 gap-4 mb-5">
             <div>
-              <p className="text-center text-gray-500 mb-2">原图</p>
-              <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)` }}>
+              <p className="text-center text-slate-400 text-sm mb-2">原图</p>
+              <div className="grid gap-2 mx-auto" style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)` }}>
                 {pattern.map((c, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-lg"
-                    style={{ background: c >= 0 ? COLORS[c] : '#E5E7EB' }}
-                  />
+                  <div key={i} className="aspect-square rounded-lg" style={{ background: c >= 0 ? COLORS[c] : '#e2e8f0' }} />
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-center text-gray-500 mb-2">你的答案</p>
-              <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)` }}>
-                {input.map((c, i) => {
-                  const ok = c === pattern[i]
-                  return (
-                    <div
-                      key={i}
-                      className={`aspect-square rounded-lg border-2 ${ok ? 'border-green-400' : 'border-red-400'}`}
-                      style={{ background: c >= 0 ? COLORS[c] : '#F3F4F6' }}
-                    />
-                  )
-                })}
+              <p className="text-center text-slate-400 text-sm mb-2">你的答案</p>
+              <div className="grid gap-2 mx-auto" style={{ gridTemplateColumns: `repeat(${currentLevel.grid}, 1fr)` }}>
+                {input.map((c, i) => (
+                  <div
+                    key={i}
+                    className={`aspect-square rounded-lg border-2 ${c === pattern[i] ? 'border-emerald-400' : 'border-red-300'}`}
+                    style={{ background: c >= 0 ? COLORS[c] : '#f1f5f9' }}
+                  />
+                ))}
               </div>
             </div>
           </div>
-          <button onClick={nextRound} className="w-full bg-blue-500 text-white text-xl font-bold py-4 rounded-xl">
-            {round + 1 < ROUNDS ? '下一轮 →' : '查看结果'}
+          <button onClick={nextRound} className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl">
+            {round + 1 < ROUNDS ? '下一轮' : '查看结果'}
           </button>
-        </div>
-      )}
-
-      {totalDone && (
-        <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-5 text-center">
-          <p className="text-5xl mb-2">🎉</p>
-          <p className="text-2xl font-bold text-green-700 mb-1">全部完成！</p>
-          <p className="text-xl text-gray-600 mb-4">通过 {score} / {ROUNDS} 轮</p>
-          <button onClick={handleComplete}
-            className="w-full bg-green-500 text-white text-xl font-bold py-4 rounded-xl">
-            记录并继续 →
-          </button>
-        </div>
+        </>
       )}
     </div>
   )
