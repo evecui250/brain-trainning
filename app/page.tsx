@@ -36,7 +36,7 @@ export default function Home() {
 
       {/* Date */}
       <p className="text-slate-400 text-base mb-1">{formatDate(dateStr)} · {getWeekday()}</p>
-      <h1 className="text-2xl font-bold text-slate-800 mb-5">你好</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-5">欢迎来到莹莹的最强大脑！</h1>
 
       {/* Streak */}
       <div className="bg-indigo-600 rounded-2xl px-5 py-4 mb-4 flex items-center justify-between">
