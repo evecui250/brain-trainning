@@ -118,11 +118,21 @@ export default function MathGame() {
         {state === 'waiting' && (input || <span className="text-slate-200">?</span>)}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '⌫', ''].map((k, i) => (
-          k === '' ? (
-            <div key={i} />
-          ) : (
+      <div className="grid grid-cols-3 gap-2">
+        {(['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '⌫', '✓'] as const).map((k, i) => {
+          if (k === '✓') {
+            return (
+              <button
+                key="confirm"
+                onClick={submit}
+                disabled={state !== 'waiting' || input === ''}
+                className="py-5 rounded-2xl text-2xl font-bold bg-indigo-600 text-white shadow-sm transition-all active:scale-95 disabled:opacity-30"
+              >
+                ✓
+              </button>
+            )
+          }
+          return (
             <button
               key={k}
               onClick={() => pressKey(k)}
@@ -136,16 +146,8 @@ export default function MathGame() {
               {k}
             </button>
           )
-        ))}
+        })}
       </div>
-
-      <button
-        onClick={submit}
-        disabled={state !== 'waiting' || input === ''}
-        className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl disabled:opacity-40 transition-all active:scale-[0.98]"
-      >
-        确认
-      </button>
     </div>
   )
 }

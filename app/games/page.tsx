@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { GAME_LIST, DAILY_GOAL } from '@/lib/utils'
 import { getTodayData } from '@/lib/storage'
 import NavBar from '@/components/NavBar'
+import { GameIcon } from '@/components/GameIcons'
 
 export default function GamesPage() {
   const [done, setDone] = useState<Set<string>>(new Set())
@@ -45,8 +46,8 @@ export default function GamesPage() {
               }`}
             >
               <div className="flex items-center justify-between">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold ${game.bg} ${game.fg}`}>
-                  {game.name[0]}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${game.bg}`}>
+                  <GameIcon type={game.type} className="w-6 h-6" />
                 </div>
                 {completed && (
                   <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">

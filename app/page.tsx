@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatDate, getWeekday, DAILY_GOAL, GAME_LIST } from '@/lib/utils'
 import { getTodayData, getStats, type Session } from '@/lib/storage'
 import NavBar from '@/components/NavBar'
+import { GameIcon } from '@/components/GameIcons'
 
 type HomeData = { sessions: Session[]; gamesCompleted: number; goalReached: boolean; streak: number }
 
@@ -70,8 +71,9 @@ export default function Home() {
             {sessions.map((s, i) => {
               const g = GAME_LIST.find(g => g.type === s.gameType)
               return (
-                <span key={i} className={`${g?.bg ?? 'bg-slate-100'} ${g?.fg ?? 'text-slate-600'} text-sm font-medium px-3 py-1 rounded-full`}>
-                  {g?.name ?? s.gameName}
+                <span key={i} className={`${g?.bg ?? 'bg-slate-100'} flex items-center gap-1.5 px-2.5 py-1 rounded-full`}>
+                  <GameIcon type={s.gameType} className="w-4 h-4 shrink-0" />
+                  <span className={`${g?.fg ?? 'text-slate-600'} text-sm font-medium`}>{g?.name ?? s.gameName}</span>
                 </span>
               )
             })}

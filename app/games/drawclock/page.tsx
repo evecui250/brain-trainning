@@ -45,13 +45,14 @@ function toXY(angleDeg: number, len: number): [number, number] {
 function ClockSVG({
   hourAngle, minAngle,
   correctHour, correctMin,
-  showCorrect, onTap,
+  showCorrect, activeHand, onTap,
 }: {
   hourAngle: number | null
   minAngle: number | null
   correctHour?: number
   correctMin?: number
   showCorrect?: boolean
+  activeHand?: 'hour' | 'minute'
   onTap?: (angle: number) => void
 }) {
   function handlePointer(e: React.PointerEvent<SVGSVGElement>) {
@@ -73,50 +74,54 @@ function ClockSVG({
       style={{ touchAction: 'none', cursor: onTap ? 'crosshair' : 'default', maxWidth: 300 }}
     >
       <circle cx={CX} cy={CY} r={R} fill="white" stroke="#e2e8f0" strokeWidth="2" />
-      {/* Hour ticks */}
       {nums.map((_, i) => {
         const a = i * 30
         const [x1, y1] = toXY(a, R - 4)
         const [x2, y2] = toXY(a, R - (i % 3 === 0 ? 14 : 8))
         return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={i % 3 === 0 ? '#94a3b8' : '#cbd5e1'} strokeWidth={i % 3 === 0 ? 2.5 : 1.5} />
       })}
-      {/* Numbers */}
       {nums.map((n, i) => {
         const [x, y] = toXY(i * 30, R - 26)
         return <text key={n} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize="16" fill="#475569" fontWeight={n % 3 === 0 ? '600' : '400'} fontFamily="system-ui">{n}</text>
       })}
-      {/* Correct hands (green, shown after result) */}
+      {/* Correct hands (green, result phase only) */}
       {showCorrect && correctHour !== undefined && (() => {
         const [hx, hy] = toXY(correctHour, R * 0.5)
         const [mx, my] = toXY(correctMin!, R * 0.72)
         return <>
-          <line x1={CX} y1={CY} x2={hx} y2={hy} stroke="#86efac" strokeWidth="6" strokeLinecap="round" />
-          <line x1={CX} y1={CY} x2={mx} y2={my} stroke="#86efac" strokeWidth="4" strokeLinecap="round" />
+          <line x1={CX} y1={CY} x2={hx} y2={hy} stroke="#86efac" strokeWidth="7" strokeLinecap="round" />
+          <line x1={CX} y1={CY} x2={mx} y2={my} stroke="#86efac" strokeWidth="5" strokeLinecap="round" />
         </>
       })()}
-      {/* User's hour hand */}
+      {/* Hour hand */}
       {hourAngle !== null && (() => {
         const [x, y] = toXY(hourAngle, R * 0.5)
-        return <line x1={CX} y1={CY} x2={x} y2={y} stroke="#4f46e5" strokeWidth="6" strokeLinecap="round" />
+        const isActive = activeHand === 'hour'
+        return <line x1={CX} y1={CY} x2={x} y2={y}
+          stroke={isActive ? '#4f46e5' : '#a5b4fc'} strokeWidth="7" strokeLinecap="round" />
       })()}
-      {/* User's minute hand */}
+      {/* Minute hand */}
       {minAngle !== null && (() => {
         const [x, y] = toXY(minAngle, R * 0.72)
-        return <line x1={CX} y1={CY} x2={x} y2={y} stroke="#818cf8" strokeWidth="4" strokeLinecap="round" />
+        const isActive = activeHand === 'minute'
+        return <line x1={CX} y1={CY} x2={x} y2={y}
+          stroke={isActive ? '#4f46e5' : '#a5b4fc'} strokeWidth="5" strokeLinecap="round" />
       })()}
-      <circle cx={CX} cy={CY} r="5" fill="#334155" />
+      <circle cx={CX} cy={CY} r="6" fill="#334155" />
     </svg>
   )
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
-type Step = 'hour' | 'minute' | 'result'
+type Phase = 'place' | 'result'
+type HandMode = 'hour' | 'minute'
 
 export default function DrawClockGame() {
   const router = useRouter()
   const [targets] = useState(getTargets)
   const [round, setRound] = useState(0)
-  const [step, setStep] = useState<Step>('hour')
+  const [phase, setPhase] = useState<Phase>('place')
+  const [mode, setMode] = useState<HandMode>('hour')
   const [hourAngle, setHourAngle] = useState<number | null>(null)
   const [minAngle, setMinAngle] = useState<number | null>(null)
   const [lastScore, setLastScore] = useState(0)
@@ -129,12 +134,15 @@ export default function DrawClockGame() {
   const correctMin = timeToAngle(target.h, target.m, false)
 
   function handleTap(angle: number) {
-    if (step === 'hour') {
-      setHourAngle(angle)
-      setStep('minute')
-    } else if (step === 'minute') {
-      setMinAngle(angle)
-    }
+    if (phase !== 'place') return
+    if (mode === 'hour') setHourAngle(angle)
+    else setMinAngle(angle)
+  }
+
+  function clearHands() {
+    setHourAngle(null)
+    setMinAngle(null)
+    setMode('hour')
   }
 
   function confirm() {
@@ -142,7 +150,7 @@ export default function DrawClockGame() {
     const s = calcScore(target, hourAngle, minAngle)
     setLastScore(s)
     setTotal(t => t + s)
-    setStep('result')
+    setPhase('result')
   }
 
   function next() {
@@ -150,7 +158,8 @@ export default function DrawClockGame() {
       setDone(true)
     } else {
       setRound(r => r + 1)
-      setStep('hour')
+      setPhase('place')
+      setMode('hour')
       setHourAngle(null)
       setMinAngle(null)
     }
@@ -189,9 +198,9 @@ export default function DrawClockGame() {
         <span className="text-slate-400 text-sm">{round + 1}/{ROUNDS}</span>
       </div>
 
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-3">
         <div className="text-center mb-3">
-          <p className="text-slate-500 text-sm mb-1">请画出这个时间</p>
+          <p className="text-slate-500 text-sm mb-1">请在表盘上画出这个时间</p>
           <p className="text-4xl font-bold text-slate-800">{timeStr}</p>
         </div>
 
@@ -201,32 +210,57 @@ export default function DrawClockGame() {
             minAngle={minAngle}
             correctHour={correctHour}
             correctMin={correctMin}
-            showCorrect={step === 'result'}
-            onTap={step !== 'result' ? handleTap : undefined}
+            showCorrect={phase === 'result'}
+            activeHand={phase === 'place' ? mode : undefined}
+            onTap={phase === 'place' ? handleTap : undefined}
           />
         </div>
 
-        <div className="text-center mt-3 text-slate-500 text-sm">
-          {step === 'hour' && '点击表盘 — 放置时针（短针）'}
-          {step === 'minute' && (
-            <div>
-              <p>点击表盘 — 放置分针（长针）</p>
-              <button onClick={() => { setHourAngle(null); setStep('hour') }} className="text-slate-400 text-xs underline mt-1">
-                重新放置时针
-              </button>
-            </div>
-          )}
-          {step === 'result' && <p className="text-emerald-600 text-sm">绿色为正确位置</p>}
-        </div>
+        {phase === 'result' && (
+          <p className="text-center text-emerald-600 text-sm mt-2">绿色为正确位置</p>
+        )}
       </div>
 
-      {step === 'minute' && minAngle !== null && (
+      {/* Hand selector + clear */}
+      {phase === 'place' && (
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setMode('hour')}
+            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+              mode === 'hour'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            时针（短针）{hourAngle !== null ? ' ✓' : ''}
+          </button>
+          <button
+            onClick={() => setMode('minute')}
+            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+              mode === 'minute'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            分针（长针）{minAngle !== null ? ' ✓' : ''}
+          </button>
+          <button
+            onClick={clearHands}
+            className="px-4 py-3 rounded-xl bg-slate-100 text-slate-500 text-sm font-medium"
+          >
+            清除
+          </button>
+        </div>
+      )}
+
+      {/* Confirm / next */}
+      {phase === 'place' && hourAngle !== null && minAngle !== null && (
         <button onClick={confirm} className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl mb-3">
           确认
         </button>
       )}
 
-      {step === 'result' && (
+      {phase === 'result' && (
         <div className="text-center">
           <p className={`text-4xl font-bold mb-3 ${lastScore >= 80 ? 'text-emerald-500' : lastScore >= 50 ? 'text-amber-500' : 'text-rose-400'}`}>
             {lastScore}<span className="text-xl text-slate-300 ml-1">分</span>

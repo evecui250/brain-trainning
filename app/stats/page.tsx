@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import NavBar from '@/components/NavBar'
 import { GAME_LIST, DAILY_GOAL } from '@/lib/utils'
+import { GameIcon } from '@/components/GameIcons'
 import { getStats, type Session } from '@/lib/storage'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -101,23 +102,30 @@ export default function StatsPage() {
           {sortedDates.map(date => {
             const daySessions = sessionsByDate[date]
             const prog = dailyProgress.find(p => p.date === date)
+            // Highest score per game type for this day
+            const best = Object.values(
+              daySessions.reduce<Record<string, Session>>((acc, s) => {
+                if (!acc[s.gameType] || s.score > acc[s.gameType].score) acc[s.gameType] = s
+                return acc
+              }, {})
+            )
             return (
               <div key={date} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className={`px-4 py-3 flex items-center justify-between ${prog?.goalReached ? 'bg-green-50' : 'bg-gray-50'}`}>
-                  <span className="text-lg font-semibold text-gray-700">{fmtFull(date)}</span>
+                <div className={`px-4 py-3 flex items-center justify-between ${prog?.goalReached ? 'bg-emerald-50' : 'bg-slate-50'}`}>
+                  <span className="text-base font-semibold text-slate-700">{fmtFull(date)}</span>
                   {prog?.goalReached
-                    ? <span className="text-emerald-600 font-semibold text-base">目标达成</span>
-                    : <span className="text-slate-400 text-base">{daySessions.length}/{DAILY_GOAL} 个游戏</span>
+                    ? <span className="text-emerald-600 font-semibold text-sm">目标达成</span>
+                    : <span className="text-slate-400 text-sm">{best.length}/{DAILY_GOAL} 个游戏</span>
                   }
                 </div>
-                <div className="divide-y divide-gray-50">
-                  {daySessions.map((s, i) => {
+                <div className="divide-y divide-slate-50">
+                  {best.map((s, i) => {
                     const def = GAME_LIST.find(g => g.type === s.gameType)
                     return (
                       <div key={i} className="flex items-center justify-between px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${def?.bg ?? 'bg-slate-100'} ${def?.fg ?? 'text-slate-600'}`}>
-                            {s.gameName[0]}
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${def?.bg ?? 'bg-slate-100'}`}>
+                            <GameIcon type={s.gameType} className="w-5 h-5" />
                           </div>
                           <span className="text-base text-slate-700">{s.gameName}</span>
                         </div>

@@ -18,23 +18,26 @@ function shuffle(n: number): number[] {
 export default function NumbersGame() {
   const router = useRouter()
   const [order] = useState(() => shuffle(TOTAL))
+  const [started, setStarted] = useState(false)
   const [next, setNext] = useState(1)
   const [done, setDone] = useState<Set<number>>(new Set())
   const [wrong, setWrong] = useState<number | null>(null)
   const [finished, setFinished] = useState(false)
   const [elapsed, setElapsed] = useState(0)
-  const startRef = useRef(Date.now())
+  const startRef = useRef(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
+    if (!started) return
+    startRef.current = Date.now()
     timerRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
     }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [])
+  }, [started])
 
   function handleTap(num: number) {
-    if (done.has(num)) return
+    if (!started || done.has(num)) return
     if (num === next) {
       const nextDone = new Set(done)
       nextDone.add(num)
@@ -51,14 +54,18 @@ export default function NumbersGame() {
     }
   }
 
+  const header = (
+    <div className="flex items-center gap-3 mb-6">
+      <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
+      <h1 className="text-xl font-bold text-slate-800">数字接龙</h1>
+    </div>
+  )
+
   if (finished) {
     const score = Math.max(100 - Math.floor(elapsed / 3), 10)
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
-        <div className="flex items-center gap-3 mb-8">
-          <button onClick={() => router.push('/games')} className="text-slate-400 text-2xl font-light w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100">‹</button>
-          <h1 className="text-xl font-bold text-slate-800">数字接龙</h1>
-        </div>
+        {header}
         <div className="flex-1 flex flex-col items-center justify-center">
           <p className="text-slate-500 text-base mb-2">最终得分</p>
           <p className="text-7xl font-bold text-indigo-600 mb-1">{score}</p>
@@ -71,6 +78,25 @@ export default function NumbersGame() {
             记录并继续
           </button>
         </div>
+      </div>
+    )
+  }
+
+  if (!started) {
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-8">
+        {header}
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center mb-6">
+          <p className="text-slate-700 font-semibold text-xl mb-3">1 → 2 → 3 … → 20</p>
+          <p className="text-slate-400 text-sm mb-1">数字随机分布在网格中</p>
+          <p className="text-slate-400 text-sm">按顺序点击，速度越快得分越高</p>
+        </div>
+        <button
+          onClick={() => setStarted(true)}
+          className="w-full bg-emerald-500 text-white text-xl font-bold py-5 rounded-2xl"
+        >
+          开始计时
+        </button>
       </div>
     )
   }

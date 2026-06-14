@@ -20,12 +20,15 @@ function load(): Session[] {
 }
 
 function today(): string {
-  // Use local date string to avoid UTC offset issues (China is UTC+8)
   const d = new Date()
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+function uniqueGameCount(sessions: Session[]): number {
+  return new Set(sessions.map(s => s.gameType)).size
 }
 
 export function addSession(
@@ -37,8 +40,9 @@ export function addSession(
   const date = today()
   sessions.push({ date, gameType, gameName, score, createdAt: new Date().toISOString() })
   localStorage.setItem(KEY, JSON.stringify(sessions))
-  const todayCount = sessions.filter(s => s.date === date).length
-  return { gamesCompleted: todayCount, goalReached: todayCount >= DAILY_GOAL }
+  const todaySessions = sessions.filter(s => s.date === date)
+  const count = uniqueGameCount(todaySessions)
+  return { gamesCompleted: count, goalReached: count >= DAILY_GOAL }
 }
 
 export function getTodayData(): {
@@ -48,7 +52,8 @@ export function getTodayData(): {
 } {
   const date = today()
   const sessions = load().filter(s => s.date === date)
-  return { sessions, gamesCompleted: sessions.length, goalReached: sessions.length >= DAILY_GOAL }
+  const count = uniqueGameCount(sessions)
+  return { sessions, gamesCompleted: count, goalReached: count >= DAILY_GOAL }
 }
 
 export function getStats(): {
@@ -66,11 +71,10 @@ export function getStats(): {
   }, {})
 
   const dates = Object.keys(byDate).sort()
-  const dailyProgress = dates.map(d => ({
-    date: d,
-    gamesCompleted: byDate[d].length,
-    goalReached: byDate[d].length >= DAILY_GOAL,
-  }))
+  const dailyProgress = dates.map(d => {
+    const count = uniqueGameCount(byDate[d])
+    return { date: d, gamesCompleted: count, goalReached: count >= DAILY_GOAL }
+  })
 
   let streak = 0
   let cur = date
