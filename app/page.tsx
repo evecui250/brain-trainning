@@ -31,9 +31,11 @@ async function getTodayData() {
       prisma.dailyProgress.findMany({ orderBy: { date: 'asc' }, select: { date: true } }),
     ])
     const streak = calcStreak(allDates.map(d => d.date))
-    return { progress, sessions, streak, error: false }
-  } catch {
-    return { progress: null, sessions: [], streak: 0, error: true }
+    return { progress, sessions, streak, error: null as string | null }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('[DB Error]', msg)
+    return { progress: null, sessions: [], streak: 0, error: msg }
   }
 }
 
@@ -48,9 +50,9 @@ export default async function Home() {
       <NavBar />
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
           <p className="text-red-600 text-lg font-semibold">⚠️ 数据库连接失败</p>
-          <p className="text-red-500 text-base mt-1">请检查 Vercel 环境变量 DATABASE_URL 是否正确设置</p>
+          <p className="text-red-500 text-sm mt-2 font-mono break-all">{error}</p>
         </div>
       )}
 
