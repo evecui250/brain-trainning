@@ -51,8 +51,8 @@ export default async function Home() {
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-          <p className="text-red-600 text-lg font-semibold">⚠️ 数据库连接失败</p>
-          <p className="text-red-500 text-sm mt-2 font-mono break-all">{error}</p>
+          <p className="text-red-600 text-lg font-semibold">⚠️ 数据加载失败，请刷新重试</p>
+          <p className="text-red-400 text-xs mt-1 font-mono break-all">{error}</p>
         </div>
       )}
 

@@ -10,15 +10,17 @@ type Problem = { a: number; b: number; op: '+' | '-'; answer: number }
 type State = 'waiting' | 'correct' | 'wrong'
 
 function makeProblem(level: number): Problem {
-  const max = 10 + level * 5
-  let a = Math.floor(Math.random() * max) + 1
-  let b = Math.floor(Math.random() * max) + 1
-  // Alternate between + and -, ensure no negative answers
-  const useAdd = Math.random() > 0.5
-  const op: '+' | '-' = useAdd ? '+' : '-'
+  // level 0: single digits (2-12), level 1: 2-digit + 1-digit (10-40),
+  // level 2: 2-digit + 2-digit (15-60), level 3: harder 2-digit (25-99)
+  const ranges: [number, number][] = [[2, 12], [10, 40], [15, 60], [25, 99]]
+  const [min, max] = ranges[Math.min(level, 3)]
+  const rand = (lo: number, hi: number) => Math.floor(Math.random() * (hi - lo + 1)) + lo
+  let a = rand(min, max)
+  let b = rand(min, max)
+  const op: '+' | '-' = Math.random() > 0.5 ? '+' : '-'
   if (op === '-') {
     if (a < b) [a, b] = [b, a]
-    if (a === b) a += 1
+    if (a === b) a += rand(1, 10)
   }
   const answer = op === '+' ? a + b : a - b
   return { a, b, op, answer }
@@ -27,7 +29,7 @@ function makeProblem(level: number): Problem {
 export default function MathGame() {
   const router = useRouter()
   const problems = useMemo(
-    () => Array.from({ length: ROUNDS }, (_, i) => makeProblem(Math.floor(i / 4))),
+    () => Array.from({ length: ROUNDS }, (_, i) => makeProblem(Math.floor(i / 3))),
     []
   )
   const [idx, setIdx] = useState(0)

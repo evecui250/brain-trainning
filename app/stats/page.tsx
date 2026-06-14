@@ -2,23 +2,42 @@
 
 import { useEffect, useState } from 'react'
 import NavBar from '@/components/NavBar'
+import { GAME_LIST } from '@/lib/utils'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer,
 } from 'recharts'
 
-type QuizResult = { date: string; score: number; total: number }
-type DailyProgress = { date: string; gamesCompleted: number; goalReached: boolean; quizDone: boolean }
+type Session = { date: string; gameType: string; gameName: string; score: number }
+type DailyProgress = { date: string; gamesCompleted: number; goalReached: boolean }
 type Stats = {
-  quizResults: QuizResult[]
   dailyProgress: DailyProgress[]
   totalSessions: number
   streak: number
+  sessions: Session[]
 }
 
 function fmtDate(d: string) {
-  const parts = d.split('-')
-  return `${parts[1]}/${parts[2]}`
+  const [, m, day] = d.split('-')
+  return `${parseInt(m)}/${parseInt(day)}`
+}
+
+function fmtFull(d: string) {
+  const [y, m, day] = d.split('-')
+  return `${y}年${parseInt(m)}月${parseInt(day)}日`
+}
+
+function scoreLabel(gameType: string, score: number): string {
+  if (score === 0) return '已完成'
+  switch (gameType) {
+    case 'math':    return `${Math.round(score / 10)}/10 答对`
+    case 'clock':   return `${score}/5 答对`
+    case 'word':    return `${score}/5 答对`
+    case 'pattern': return `${score} 关通过`
+    case 'numbers': return `${score}秒完成`
+    case 'memory':  return '已完成'
+    default:        return `${score} 分`
+  }
 }
 
 export default function StatsPage() {
@@ -37,35 +56,27 @@ export default function StatsPage() {
     )
   }
 
-  const { quizResults, dailyProgress, totalSessions, streak } = stats
-
-  const chartData = (() => {
-    const map = new Map<string, { date: string; score: number | null; games: number }>()
-    quizResults.forEach(r => {
-      map.set(r.date, { date: r.date, score: (r.score / r.total) * 5, games: 0 })
-    })
-    dailyProgress.forEach(p => {
-      const existing = map.get(p.date) ?? { date: p.date, score: null, games: 0 }
-      map.set(p.date, { ...existing, games: p.gamesCompleted })
-    })
-    return Array.from(map.values())
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30)
-      .map(d => ({ ...d, date: fmtDate(d.date) }))
-  })()
-
-  const avgScore = quizResults.length > 0
-    ? (quizResults.reduce((s, r) => s + r.score / r.total * 5, 0) / quizResults.length).toFixed(1)
-    : '-'
-
+  const { dailyProgress, totalSessions, streak, sessions } = stats
   const goalDays = dailyProgress.filter(p => p.goalReached).length
 
+  const chartData = dailyProgress
+    .slice(-14)
+    .map(p => ({ date: fmtDate(p.date), games: p.gamesCompleted, goal: p.goalReached }))
+
+  // Group sessions by date
+  const sessionsByDate = sessions.reduce<Record<string, Session[]>>((acc, s) => {
+    if (!acc[s.date]) acc[s.date] = []
+    acc[s.date].push(s)
+    return acc
+  }, {})
+  const sortedDates = Object.keys(sessionsByDate).sort().reverse().slice(0, 30)
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
+    <div className="max-w-lg mx-auto px-4 py-6 pb-24">
       <NavBar />
       <h1 className="text-3xl font-bold text-gray-800 mb-5">📊 训练记录</h1>
 
-      {/* Summary cards */}
+      {/* Summary */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
           <p className="text-4xl font-bold text-orange-500">{streak}</p>
@@ -75,91 +86,83 @@ export default function StatsPage() {
           <p className="text-4xl font-bold text-blue-500">{totalSessions}</p>
           <p className="text-gray-500 text-lg mt-1">累计训练次数</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-          <p className="text-4xl font-bold text-green-500">{avgScore}</p>
-          <p className="text-gray-500 text-lg mt-1">平均测试得分</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-          <p className="text-4xl font-bold text-purple-500">{goalDays}</p>
-          <p className="text-gray-500 text-lg mt-1">完成目标天数</p>
+        <div className="bg-white rounded-2xl p-4 shadow-sm text-center col-span-2">
+          <p className="text-4xl font-bold text-green-500">{goalDays}</p>
+          <p className="text-gray-500 text-lg mt-1">完成每日目标天数</p>
         </div>
       </div>
 
-      {chartData.length === 0 ? (
+      {/* 14-day bar chart */}
+      {chartData.length > 0 && (
+        <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-3">近14天每日训练数</h2>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={chartData} barSize={20}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis domain={[0, 8]} ticks={[0, 2, 4, 5, 8]} tick={{ fontSize: 12 }} />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <Tooltip formatter={(val: any) => [`${val} 个`, '游戏数']} />
+              <Bar
+                dataKey="games"
+                radius={[4, 4, 0, 0]}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                fill="#60a5fa"
+                // color each bar green if goal reached
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                label={false}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="text-center text-sm text-gray-400 mt-1">蓝色=训练，满5个为完成目标</p>
+        </div>
+      )}
+
+      {/* Per-day game history */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-3">每日详细记录</h2>
+
+      {sortedDates.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 text-center text-gray-400 text-xl shadow-sm">
-          <p className="text-5xl mb-3">📈</p>
-          <p>还没有数据</p>
-          <p className="text-base mt-1">完成训练和测试后这里将显示趋势图</p>
+          <p className="text-5xl mb-3">📋</p>
+          <p>还没有训练记录</p>
+          <p className="text-base mt-1">完成游戏后这里会显示详细记录</p>
         </div>
       ) : (
-        <>
-          {/* Quiz Score Trend */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
-            <h2 className="text-xl font-semibold text-gray-700 mb-3">认知测试得分趋势</h2>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} tick={{ fontSize: 12 }} />
-                <Tooltip
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(val: any) => [`${typeof val === 'number' ? val.toFixed(1) : val} 分`, '测试得分']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="score"
-                  stroke="#4A90D9"
-                  strokeWidth={3}
-                  dot={{ fill: '#4A90D9', r: 5 }}
-                  connectNulls={false}
-                  name="得分"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Games completed per day */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
-            <h2 className="text-xl font-semibold text-gray-700 mb-3">每日训练游戏数</h2>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis domain={[0, 8]} ticks={[0, 2, 4, 5, 8]} tick={{ fontSize: 12 }} />
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <Tooltip formatter={(val: any) => [`${val} 个`, '游戏数']} />
-                <Bar dataKey="games" fill="#52C41A" radius={[4, 4, 0, 0]} name="游戏数" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Recent quiz history */}
-          {quizResults.length > 0 && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-700 mb-3">近期测试记录</h2>
-              <div className="space-y-2">
-                {[...quizResults].reverse().slice(0, 7).map(r => (
-                  <div key={r.date} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                    <span className="text-gray-600 text-lg">{fmtDate(r.date)}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-blue-500 rounded-full h-3"
-                          style={{ width: `${(r.score / r.total) * 100}%` }}
-                        />
+        <div className="space-y-4">
+          {sortedDates.map(date => {
+            const daySessions = sessionsByDate[date]
+            const prog = dailyProgress.find(p => p.date === date)
+            return (
+              <div key={date} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                {/* Date header */}
+                <div className={`px-4 py-3 flex items-center justify-between ${prog?.goalReached ? 'bg-green-50' : 'bg-gray-50'}`}>
+                  <span className="text-lg font-semibold text-gray-700">{fmtFull(date)}</span>
+                  {prog?.goalReached
+                    ? <span className="text-green-600 font-semibold text-base">✅ 目标达成</span>
+                    : <span className="text-gray-400 text-base">{daySessions.length}/5 个游戏</span>
+                  }
+                </div>
+                {/* Game rows */}
+                <div className="divide-y divide-gray-50">
+                  {daySessions.map((s, i) => {
+                    const def = GAME_LIST.find(g => g.type === s.gameType)
+                    return (
+                      <div key={i} className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{def?.icon ?? '🎮'}</span>
+                          <span className="text-lg text-gray-700">{s.gameName}</span>
+                        </div>
+                        <span className="text-base font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                          {scoreLabel(s.gameType, s.score)}
+                        </span>
                       </div>
-                      <span className={`font-bold text-lg w-14 text-right ${
-                        r.score >= 4 ? 'text-green-600' : r.score >= 3 ? 'text-yellow-600' : 'text-red-500'
-                      }`}>
-                        {r.score}/{r.total}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )}
-        </>
+            )
+          })}
+        </div>
       )}
     </div>
   )

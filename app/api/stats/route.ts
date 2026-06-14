@@ -5,19 +5,20 @@ import { prisma } from '@/lib/prisma'
 import { getToday } from '@/lib/utils'
 
 export async function GET() {
-  const quizResults = await prisma.quizResult.findMany({
-    orderBy: { date: 'asc' },
-  })
-
-  const dailyProgress = await prisma.dailyProgress.findMany({
-    orderBy: { date: 'asc' },
-  })
-
-  const totalSessions = await prisma.gameSession.count({ where: { completed: true } })
+  const [quizResults, dailyProgress, totalSessions, sessions] = await Promise.all([
+    prisma.quizResult.findMany({ orderBy: { date: 'asc' } }),
+    prisma.dailyProgress.findMany({ orderBy: { date: 'asc' } }),
+    prisma.gameSession.count({ where: { completed: true } }),
+    prisma.gameSession.findMany({
+      where: { completed: true },
+      orderBy: [{ date: 'desc' }, { createdAt: 'asc' }],
+      select: { date: true, gameType: true, gameName: true, score: true },
+    }),
+  ])
 
   const streak = calcStreak(dailyProgress.map(p => p.date))
 
-  return NextResponse.json({ quizResults, dailyProgress, totalSessions, streak })
+  return NextResponse.json({ quizResults, dailyProgress, totalSessions, streak, sessions })
 }
 
 function calcStreak(dates: string[]): number {
