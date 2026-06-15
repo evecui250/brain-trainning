@@ -70,9 +70,11 @@ export default function PatternGame() {
 
   function check() {
     let correct = 0
-    const total = currentLevel.grid * currentLevel.grid
-    pattern.forEach((p, i) => { if (p === input[i]) correct++ })
-    const pass = correct / total >= 0.75
+    let litCount = 0
+    pattern.forEach((p, i) => {
+      if (p >= 0) { litCount++; if (p === input[i]) correct++ }
+    })
+    const pass = litCount > 0 && correct / litCount >= 0.75
     if (pass) setScore(s => s + 1)
     setLastResult(pass ? 'pass' : 'fail')
     setPhase('result')

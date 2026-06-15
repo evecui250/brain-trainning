@@ -23,6 +23,8 @@ export const GAME_LIST = [
   { type: 'shopping',  name: '购物清单', desc: '记住清单上的物品', bg: 'bg-teal-100',    fg: 'text-teal-600'    },
   { type: 'reaction',  name: '反应训练', desc: '见绿点击，见红不动', bg: 'bg-lime-100',  fg: 'text-lime-600'    },
   { type: 'mapdir',    name: '地图方向', desc: '按方向找到终点',   bg: 'bg-sky-100',     fg: 'text-sky-600'     },
+  { type: 'stock',     name: '炒股票',   desc: '低买高卖赚最多',   bg: 'bg-green-100',   fg: 'text-green-700'   },
+  { type: 'dog',       name: '找白狗',   desc: '找出唯一的白狗',   bg: 'bg-yellow-100',  fg: 'text-yellow-700'  },
 ] as const
 
 export type GameType = typeof GAME_LIST[number]['type']

@@ -24,6 +24,7 @@ function fmtFull(d: string) {
 function scoreLabel(score: number, gameType: string): string {
   if (gameType === 'numbers') return `${score} 秒`
   if (gameType === 'memory')  return `${score} 次`
+  if (gameType === 'stock')   return `¥${score}`
   return `${score} 分`
 }
 
@@ -90,7 +91,7 @@ export default function StatsPage() {
             <BarChart data={chartData} barSize={20}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 8]} ticks={[0, 2, 4, 5, 8]} tick={{ fontSize: 12 }} />
+              <YAxis domain={[0, 12]} ticks={[0, 3, 5, 9, 12]} tick={{ fontSize: 12 }} />
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <Tooltip formatter={(val: any) => [`${val} 个`, '游戏数']} />
               <Bar dataKey="games" fill="#60a5fa" radius={[4, 4, 0, 0]} />

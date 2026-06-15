@@ -77,8 +77,13 @@ export function getStats(): {
   })
 
   let streak = 0
-  let cur = date
   const dateSet = new Set(dates)
+  // If no activity today yet, preserve yesterday's streak so it doesn't reset to 0
+  let cur = dateSet.has(date) ? date : (() => {
+    const d = new Date(date + 'T12:00:00')
+    d.setDate(d.getDate() - 1)
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  })()
   while (dateSet.has(cur)) {
     streak++
     const d = new Date(cur + 'T12:00:00')

@@ -101,6 +101,37 @@ export function DrawClockIcon({ className }: P) {
   )
 }
 
+export function StockIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <line x1="3" y1="26" x2="29" y2="26" stroke="#bbf7d0" strokeWidth="0.8"/>
+      <line x1="3" y1="19" x2="29" y2="19" stroke="#bbf7d0" strokeWidth="0.8"/>
+      <line x1="3" y1="12" x2="29" y2="12" stroke="#bbf7d0" strokeWidth="0.8"/>
+      <path d="M3,24 8,20 13,22 18,13 23,15 29,7 29,26 3,26 Z" fill="#16a34a" opacity="0.12"/>
+      <polyline points="3,24 8,20 13,22 18,13 23,15 29,7"
+        fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="29" cy="7" r="2.5" fill="#16a34a"/>
+    </svg>
+  )
+}
+
+export function DogIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <ellipse cx="18" cy="20" rx="8" ry="6" fill="#D4A017"/>
+      <ellipse cx="12" cy="16" rx="4" ry="6" fill="#B88A10" transform="rotate(-20 12 16)"/>
+      <ellipse cx="21" cy="16" rx="4" ry="6" fill="#B88A10" transform="rotate(20 21 16)"/>
+      <circle cx="16" cy="13" r="8" fill="#D4A017"/>
+      <circle cx="13" cy="11" r="2" fill="white"/>
+      <circle cx="19" cy="11" r="2" fill="white"/>
+      <circle cx="13.5" cy="11" r="1.2" fill="#1a1a1a"/>
+      <circle cx="19.5" cy="11" r="1.2" fill="#1a1a1a"/>
+      <ellipse cx="16" cy="15" rx="2" ry="1.4" fill="#2d2d2d"/>
+      <path d="M13.5 18 Q16 20 18.5 18" stroke="#2d2d2d" strokeWidth="1" fill="none" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 export function ShoppingIcon({ className }: P) {
   return (
     <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
@@ -152,6 +183,8 @@ export function GameIcon({ type, className = 'w-6 h-6' }: { type: string; classN
     case 'shopping':  return <ShoppingIcon {...p} />
     case 'reaction':  return <ReactionIcon {...p} />
     case 'mapdir':    return <MapDirIcon {...p} />
+    case 'stock':     return <StockIcon {...p} />
+    case 'dog':       return <DogIcon {...p} />
     default:          return null
   }
 }
