@@ -89,7 +89,7 @@ export default function PatternGame() {
       setRound(next)
       setPattern(makePattern(nextLevel))
       setInput(Array(nextLevel.grid * nextLevel.grid).fill(-1))
-      setLastResult(null)
+      setLastRoundScore(null)
       setPhase('show')
     }
   }
