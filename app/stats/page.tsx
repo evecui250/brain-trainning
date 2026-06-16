@@ -24,7 +24,8 @@ function fmtFull(d: string) {
 function scoreLabel(score: number, gameType: string): string {
   if (gameType === 'numbers') return `${score} 秒`
   if (gameType === 'memory')  return `${score} 次`
-  if (gameType === 'stock')   return `¥${score}`
+  if (gameType === 'stock')      return `¥${score}`
+  if (gameType === 'goldminer')  return `${score} 块`
   return `${score} 分`
 }
 

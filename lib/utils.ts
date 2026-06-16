@@ -25,6 +25,8 @@ export const GAME_LIST = [
   { type: 'mapdir',    name: '地图方向', desc: '按方向找到终点',   bg: 'bg-sky-100',     fg: 'text-sky-600'     },
   { type: 'stock',     name: '炒股票',   desc: '低买高卖赚最多',   bg: 'bg-green-100',   fg: 'text-green-700'   },
   { type: 'dog',       name: '找白狗',   desc: '找出唯一的白狗',   bg: 'bg-yellow-100',  fg: 'text-yellow-700'  },
+  { type: 'goldminer', name: '黄金矿工', desc: '用爪子抓住地下黄金', bg: 'bg-amber-100',  fg: 'text-amber-800'   },
+  { type: 'gemcup',    name: '找宝石',   desc: '跟踪藏有宝石的杯子', bg: 'bg-fuchsia-100', fg: 'text-fuchsia-700' },
 ] as const
 
 export type GameType = typeof GAME_LIST[number]['type']

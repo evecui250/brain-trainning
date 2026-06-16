@@ -101,6 +101,32 @@ export function DrawClockIcon({ className }: P) {
   )
 }
 
+export function GoldMinerIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <rect x="2" y="4" width="28" height="5" rx="2" fill="#92400e"/>
+      <line x1="16" y1="9" x2="16" y2="20" stroke="#6b3a1f" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="16" y1="20" x2="10" y2="27" stroke="#6b3a1f" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="16" y1="20" x2="22" y2="27" stroke="#6b3a1f" strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="8"  cy="22" r="5" fill="#FFD700" stroke="#D97706" strokeWidth="1.5"/>
+      <circle cx="24" cy="19" r="4" fill="#FFD700" stroke="#D97706" strokeWidth="1.5"/>
+      <circle cx="14" cy="28" r="3.5" fill="#FFD700" stroke="#D97706" strokeWidth="1.5"/>
+    </svg>
+  )
+}
+
+export function GemCupIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
+      <path d="M4,28 L8,10 L14,10 L10,28 Z" fill="#D97706" stroke="#B45309" strokeWidth="0.8"/>
+      <path d="M14,28 L13,10 L19,10 L18,28 Z" fill="#D97706" stroke="#B45309" strokeWidth="0.8"/>
+      <path d="M18,28 L24,10 L28,10 L24,28 Z" fill="#D97706" stroke="#B45309" strokeWidth="0.8"/>
+      <polygon points="16,3 19,8 16,12 13,8" fill="#60a5fa" stroke="#2563eb" strokeWidth="0.8"/>
+      <polygon points="16,3 19,8 16,7 13,8" fill="#93c5fd"/>
+    </svg>
+  )
+}
+
 export function StockIcon({ className }: P) {
   return (
     <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden>
@@ -185,6 +211,8 @@ export function GameIcon({ type, className = 'w-6 h-6' }: { type: string; classN
     case 'mapdir':    return <MapDirIcon {...p} />
     case 'stock':     return <StockIcon {...p} />
     case 'dog':       return <DogIcon {...p} />
+    case 'goldminer': return <GoldMinerIcon {...p} />
+    case 'gemcup':    return <GemCupIcon {...p} />
     default:          return null
   }
 }
