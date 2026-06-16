@@ -35,11 +35,11 @@ export default function PatternGame() {
   const [pattern, setPattern] = useState(() => makePattern(LEVELS[0]))
   const [phase, setPhase] = useState<Phase>('show')
   const [input, setInput] = useState<number[]>(() => Array(LEVELS[0].grid * LEVELS[0].grid).fill(-1))
-  const [score, setScore] = useState(0)
+  const [roundScores, setRoundScores] = useState<number[]>([])
+  const [lastRoundScore, setLastRoundScore] = useState<number | null>(null)
   const [totalDone, setTotalDone] = useState(false)
   const [countdown, setCountdown] = useState(LEVELS[0].showSeconds)
   const [selectedColor, setSelectedColor] = useState(0)
-  const [lastResult, setLastResult] = useState<'pass' | 'fail' | null>(null)
 
   const currentLevel = level[Math.min(round, LEVELS.length - 1)]
 
@@ -74,9 +74,9 @@ export default function PatternGame() {
     pattern.forEach((p, i) => {
       if (p >= 0) { litCount++; if (p === input[i]) correct++ }
     })
-    const pass = litCount > 0 && correct / litCount >= 0.75
-    if (pass) setScore(s => s + 1)
-    setLastResult(pass ? 'pass' : 'fail')
+    const roundScore = litCount > 0 ? Math.round(correct / litCount * 100) : 0
+    setRoundScores(prev => [...prev, roundScore])
+    setLastRoundScore(roundScore)
     setPhase('result')
   }
 
@@ -95,7 +95,9 @@ export default function PatternGame() {
   }
 
   if (totalDone) {
-    const finalScore = Math.round((score / ROUNDS) * 100)
+    const finalScore = roundScores.length > 0
+      ? Math.round(roundScores.reduce((a, b) => a + b, 0) / roundScores.length)
+      : 0
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
         <div className="flex items-center gap-3 mb-8">
@@ -105,7 +107,7 @@ export default function PatternGame() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <p className="text-slate-500 text-base mb-2">最终得分</p>
           <p className="text-7xl font-bold text-indigo-600 mb-1">{finalScore}</p>
-          <p className="text-slate-400 text-base mb-2">通过 {score} / {ROUNDS} 轮</p>
+          <p className="text-slate-400 text-sm mb-3">每轮得分：{roundScores.map((s, i) => `第${i+1}轮 ${s}分`).join('　')}</p>
           <p className="text-slate-400 text-sm mb-8">满分 100 分</p>
           <button
             onClick={() => { addSession('pattern', '图案记忆', finalScore); router.push('/games') }}
@@ -196,8 +198,8 @@ export default function PatternGame() {
 
       {phase === 'result' && !totalDone && (
         <>
-          <div className={`rounded-xl p-3 mb-4 text-center font-semibold ${lastResult === 'pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
-            {lastResult === 'pass' ? '答对了' : '加油'}
+          <div className={`rounded-xl p-3 mb-4 text-center font-semibold ${lastRoundScore !== null && lastRoundScore >= 75 ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
+            本轮得分：{lastRoundScore} 分
           </div>
           <div className="grid grid-cols-2 gap-4 mb-5">
             <div>
@@ -214,7 +216,11 @@ export default function PatternGame() {
                 {input.map((c, i) => (
                   <div
                     key={i}
-                    className={`aspect-square rounded-lg border-2 ${c === pattern[i] ? 'border-emerald-400' : 'border-red-300'}`}
+                    className={`aspect-square rounded-lg border-2 ${
+                      pattern[i] >= 0
+                        ? (c === pattern[i] ? 'border-emerald-400' : 'border-red-400')
+                        : (c >= 0 ? 'border-orange-300' : 'border-slate-200')
+                    }`}
                     style={{ background: c >= 0 ? COLORS[c] : '#f1f5f9' }}
                   />
                 ))}
