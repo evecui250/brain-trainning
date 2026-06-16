@@ -8,7 +8,7 @@ const INITIAL_CASH = 1000
 const START_PRICE = 100
 const TOTAL_TICKS = 70
 const VISIBLE_TICKS = 35
-const TICK_MS = 600
+const TICK_MS = 400
 
 type Trade = { idx: number; type: 'buy' | 'sell'; price: number }
 type Trend = { dir: 1 | -1; remaining: number }
@@ -17,7 +17,7 @@ function nextPrice(prev: number, trendRef: { current: Trend }): number {
   if (trendRef.current.remaining <= 0) {
     trendRef.current = {
       dir: (Math.random() > 0.5 ? 1 : -1) as 1 | -1,
-      remaining: 12 + Math.floor(Math.random() * 10),
+      remaining: 4 + Math.floor(Math.random() * 5),
     }
   }
   const pull = (100 - prev) * 0.025
@@ -260,16 +260,13 @@ export default function StockGame() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={buy} disabled={shares > 0 || cash < currentPrice}
-          className="py-5 rounded-2xl text-white text-xl font-bold bg-emerald-500 active:scale-95 transition-all disabled:opacity-30">
-          买入
-        </button>
-        <button onClick={sell} disabled={shares === 0}
-          className="py-5 rounded-2xl text-white text-xl font-bold bg-red-500 active:scale-95 transition-all disabled:opacity-30">
-          卖出
-        </button>
-      </div>
+      <button
+        onClick={shares > 0 ? sell : buy}
+        disabled={shares === 0 && cash < currentPrice}
+        className={`w-full py-5 rounded-2xl text-white text-xl font-bold active:scale-95 transition-all disabled:opacity-30 ${shares > 0 ? 'bg-red-500' : 'bg-emerald-500'}`}
+      >
+        {shares > 0 ? '卖出' : '买入'}
+      </button>
     </div>
   )
 }

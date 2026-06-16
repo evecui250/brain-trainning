@@ -68,9 +68,7 @@ export default function GemCupGame() {
     shuffling.current = true
     setPhase('shuffling')
     let currentSlots = [0, 1, 2]
-    let currentGem = Math.floor(Math.random() * 3)
     setSlots([...currentSlots])
-    setGemCup(currentGem)
 
     for (let i = 0; i < swaps; i++) {
       await new Promise<void>(r => setTimeout(r, swapMs))
@@ -195,7 +193,7 @@ export default function GemCupGame() {
         {/* Cups */}
         {[0, 1, 2].map(cupIdx => {
           const slot = slots[cupIdx]
-          const lifted = isResult && (cupIdx === gemCup || cupIdx === chosen)
+          const lifted = (isResult && (cupIdx === gemCup || cupIdx === chosen)) || (phase === 'reveal' && cupIdx === gemCup)
           const revealed = isResult
           return (
             <div

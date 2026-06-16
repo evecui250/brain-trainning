@@ -209,6 +209,23 @@ export default function DogGame() {
     }
   }, [submitted, dogs, wrongCount])
 
+  const handleSVGClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (submitted) return
+    const svg = e.currentTarget
+    const rect = svg.getBoundingClientRect()
+    const clickX = (e.clientX - rect.left) * (360 / rect.width)
+    const clickY = (e.clientY - rect.top) * (290 / rect.height)
+    let minDist = Infinity
+    let nearestIdx = -1
+    dogs.forEach((d, i) => {
+      const dx = clickX - d.x
+      const dy = clickY - d.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist < minDist) { minDist = dist; nearestIdx = i }
+    })
+    if (nearestIdx >= 0 && minDist < 42) handleTap(nearestIdx)
+  }, [submitted, dogs, handleTap])
+
   function handleCantFind() {
     if (submitted) return
     setScores(p => [...p, 0])
@@ -300,7 +317,7 @@ export default function DogGame() {
 
       {/* Yard scene */}
       <div className="rounded-2xl overflow-hidden border border-green-200 shadow-sm mb-3">
-        <svg viewBox="0 0 360 290" width="100%" style={{ display: 'block' }}>
+        <svg viewBox="0 0 360 290" width="100%" style={{ display: 'block', cursor: submitted ? 'default' : 'pointer' }} onClick={handleSVGClick}>
           {/* Sky */}
           <rect x="0" y="0" width="360" height="105" fill="#BAE6FD"/>
           {/* Sun */}
@@ -339,12 +356,8 @@ export default function DogGame() {
             return (
               <g key={i}
                 transform={`translate(${d.x},${d.y})`}
-                onClick={() => handleTap(i)}
-                style={{ cursor: submitted ? 'default' : 'pointer' }}
                 opacity={dimmed ? 0.35 : 1}
               >
-                {/* Hit area */}
-                <rect x={-28 * d.scale / 0.7} y={-50 * d.scale / 0.7} width={56 * d.scale / 0.7} height={62 * d.scale / 0.7} fill="transparent"/>
                 {/* Highlight ring for found white dog */}
                 {highlighted && (
                   <ellipse cx="0" cy="2" rx={20 * d.scale / 0.7} ry={14 * d.scale / 0.7} fill="none" stroke="#10B981" strokeWidth="3"/>

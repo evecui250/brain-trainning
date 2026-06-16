@@ -14,17 +14,17 @@ const EXTEND_SPEED = 7
 const RETRACT_EMPTY = 14
 const RETRACT_GOLD = 7
 const TICK_MS = 50
-const GAME_SECS = 60
+const GAME_SECS = 50
 
 type Gold = { id: number; x: number; y: number; r: number; grabbed: boolean; removed: boolean }
 type Phase = 'swinging' | 'extending' | 'retracting'
 
 function makeGolds(): Gold[] {
   const templates = [
-    { x: 75,  y: 140, r: 17 }, { x: 175, y: 155, r: 22 }, { x: 265, y: 135, r: 15 },
-    { x: 55,  y: 210, r: 20 }, { x: 195, y: 200, r: 14 }, { x: 300, y: 195, r: 18 },
-    { x: 115, y: 275, r: 16 }, { x: 230, y: 260, r: 21 }, { x: 330, y: 255, r: 14 },
-    { x: 80,  y: 320, r: 18 }, { x: 185, y: 310, r: 16 },
+    { x: 75,  y: 140, r: 17 }, { x: 175, y: 155, r: 22 }, { x: 265, y: 135, r: 15 }, { x: 320, y: 148, r: 13 },
+    { x: 55,  y: 210, r: 20 }, { x: 140, y: 195, r: 15 }, { x: 195, y: 200, r: 14 }, { x: 300, y: 195, r: 18 },
+    { x: 55,  y: 262, r: 17 }, { x: 115, y: 275, r: 16 }, { x: 230, y: 260, r: 21 }, { x: 285, y: 268, r: 13 }, { x: 330, y: 255, r: 14 },
+    { x: 80,  y: 320, r: 18 }, { x: 185, y: 310, r: 16 }, { x: 260, y: 318, r: 14 },
   ]
   return templates.map((t, id) => ({
     id, x: t.x + (Math.random() - 0.5) * 24,
@@ -276,7 +276,7 @@ export default function GoldMinerGame() {
           <ellipse cx="310" cy="230" rx="22" ry="14" fill="#5A3820" opacity="0.6"/>
           <ellipse cx="150" cy="340" rx="16" ry="10" fill="#5A3820" opacity="0.5"/>
           {/* Gold nuggets */}
-          {g.golds.filter(gold => !gold.removed).map(gold => (
+          {g.golds.filter(gold => !gold.removed && !gold.grabbed).map(gold => (
             <GoldSVG key={gold.id} x={gold.x} y={gold.y} r={gold.r}/>
           ))}
           {/* Claw and rope */}
