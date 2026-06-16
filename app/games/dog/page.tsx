@@ -22,6 +22,8 @@ const ROUNDS = [
   { count: 12, label: '简单' },
   { count: 18, label: '中等' },
   { count: 24, label: '困难' },
+  { count: 30, label: '高手' },
+  { count: 36, label: '专家' },
 ]
 
 function shuffle<T>(arr: T[]): T[] {
@@ -152,11 +154,11 @@ type DogData = { x: number; y: number; scale: number; pose: DogPose; variant: Do
 function generateDogs(count: number): DogData[] {
   const cols = count <= 12 ? 4 : count <= 18 ? 5 : 6
   const rows = Math.ceil(count / cols)
-  const sceneW = 360, sceneH = 290
-  const topMargin = 115 // sky + a bit of grass
+  const sceneW = 360, sceneH = 340
+  const topMargin = 115
   const cellW = (sceneW - 30) / cols
   const cellH = (sceneH - topMargin - 20) / rows
-  const scale = count <= 12 ? 0.7 : count <= 18 ? 0.58 : 0.48
+  const scale = count <= 12 ? 0.70 : count <= 18 ? 0.58 : count <= 24 ? 0.48 : count <= 30 ? 0.42 : 0.36
 
   const variants: DogVariant[] = shuffle([
     'white',
@@ -214,7 +216,7 @@ export default function DogGame() {
     const svg = e.currentTarget
     const rect = svg.getBoundingClientRect()
     const clickX = (e.clientX - rect.left) * (360 / rect.width)
-    const clickY = (e.clientY - rect.top) * (290 / rect.height)
+    const clickY = (e.clientY - rect.top) * (340 / rect.height)
     let minDist = Infinity
     let nearestIdx = -1
     dogs.forEach((d, i) => {
@@ -317,7 +319,7 @@ export default function DogGame() {
 
       {/* Yard scene */}
       <div className="rounded-2xl overflow-hidden border border-green-200 shadow-sm mb-3">
-        <svg viewBox="0 0 360 290" width="100%" style={{ display: 'block', cursor: submitted ? 'default' : 'pointer' }} onClick={handleSVGClick}>
+        <svg viewBox="0 0 360 340" width="100%" style={{ display: 'block', cursor: submitted ? 'default' : 'pointer' }} onClick={handleSVGClick}>
           {/* Sky */}
           <rect x="0" y="0" width="360" height="105" fill="#BAE6FD"/>
           {/* Sun */}
@@ -329,7 +331,7 @@ export default function DogGame() {
           {/* Ground fade */}
           <rect x="0" y="100" width="360" height="18" fill="#34D399"/>
           {/* Grass */}
-          <rect x="0" y="112" width="360" height="178" fill="#4ADE80"/>
+          <rect x="0" y="112" width="360" height="228" fill="#4ADE80"/>
           {/* Fence in background */}
           {[20,60,100,140,180,220,260,300,340].map(x => (
             <g key={x}>

@@ -6,7 +6,7 @@ import { addSession } from '@/lib/storage'
 
 const ROUNDS = 5
 const MEMORIZE_SECS = 3
-const GRID_SIZE = 24
+const GRID_SIZE = 36
 
 type HSL = [number, number, number]
 
@@ -36,24 +36,25 @@ function randColor(): HSL {
 
 function buildGrid(target: HSL): HSL[] {
   const all: HSL[] = []
-  // 7 similar (small hue drift)
-  for (let i = 1; i <= 7; i++) {
+  // 11 similar colors near the target hue (the confusables)
+  for (let i = 1; i <= 11; i++) {
     const sign = i % 2 === 0 ? 1 : -1
     all.push([
-      ((target[0] + sign * i * 7) + 360) % 360,
-      Math.min(85, Math.max(48, target[1] + (Math.random() * 12 - 6))),
-      Math.min(65, Math.max(35, target[2] + (Math.random() * 10 - 5))),
-    ].map(Math.round) as HSL)
+      Math.round(((target[0] + sign * i * 8) + 360) % 360),
+      Math.min(85, Math.max(48, target[1] + (Math.random() * 14 - 7))),
+      Math.min(65, Math.max(35, target[2] + (Math.random() * 12 - 6))),
+    ] as HSL)
   }
-  // 16 spread across the spectrum
-  const offsets = [40, 80, 120, 160, 200, 240, 280, 320, 20, 60, 100, 140, 180, 220, 260, 300]
-  for (const o of offsets) {
-    all.push([Math.round((target[0] + o) % 360), 55 + Math.round(Math.random() * 25), 40 + Math.round(Math.random() * 20)])
+  // 24 colors spread evenly across the full hue spectrum
+  for (let i = 0; i < 24; i++) {
+    const hue = Math.round((i * (360 / 24) + Math.random() * 8) % 360)
+    all.push([hue, 55 + Math.round(Math.random() * 25), 40 + Math.round(Math.random() * 20)])
   }
-  // Shuffle and insert target at random position
-  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, GRID_SIZE - 1)
-  shuffled.splice(Math.floor(Math.random() * GRID_SIZE), 0, target)
-  return shuffled.slice(0, GRID_SIZE)
+  // Take 35, add target, sort by hue for gradient display
+  const picked = all.sort(() => Math.random() - 0.5).slice(0, GRID_SIZE - 1)
+  picked.push(target)
+  picked.sort((a, b) => a[0] - b[0])
+  return picked.slice(0, GRID_SIZE)
 }
 
 type Phase = 'memorize' | 'pick' | 'result'

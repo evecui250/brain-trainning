@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { addSession } from '@/lib/storage'
 
 const ROUND_CONFIGS = [
-  { swaps: 3, swapMs: 800,  label: '简单' },
-  { swaps: 5, swapMs: 500,  label: '中等' },
-  { swaps: 8, swapMs: 320,  label: '困难' },
+  { swaps: 5,  swapMs: 700, label: '简单' },
+  { swaps: 9,  swapMs: 430, label: '中等' },
+  { swaps: 14, swapMs: 260, label: '困难' },
 ]
 const TOTAL_ROUNDS = 3
 

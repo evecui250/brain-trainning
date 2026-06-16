@@ -8,7 +8,7 @@ const INITIAL_CASH = 1000
 const START_PRICE = 100
 const TOTAL_TICKS = 70
 const VISIBLE_TICKS = 35
-const TICK_MS = 400
+const TICK_MS = 300
 
 type Trade = { idx: number; type: 'buy' | 'sell'; price: number }
 type Trend = { dir: 1 | -1; remaining: number }
@@ -17,7 +17,7 @@ function nextPrice(prev: number, trendRef: { current: Trend }): number {
   if (trendRef.current.remaining <= 0) {
     trendRef.current = {
       dir: (Math.random() > 0.5 ? 1 : -1) as 1 | -1,
-      remaining: 4 + Math.floor(Math.random() * 5),
+      remaining: 3 + Math.floor(Math.random() * 4),
     }
   }
   const pull = (100 - prev) * 0.025
@@ -194,17 +194,29 @@ export default function StockGame() {
 
   if (phase === 'done') {
     const profit = finalValue - INITIAL_CASH
+    const priceMin = Math.min(...prices)
+    const priceMax = Math.max(...prices)
+    const bestGain = Math.round(INITIAL_CASH * (priceMax / priceMin - 1))
+    const actualGain = finalValue - INITIAL_CASH
+    const gameScore = finalValue >= INITIAL_CASH
+      ? Math.min(100, 90 + Math.round((bestGain > 0 ? actualGain / bestGain : 1) * 10))
+      : Math.max(0, Math.round(90 * finalValue / INITIAL_CASH))
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 pb-8 min-h-screen flex flex-col">
         {header}
         <div className="flex-1 flex flex-col items-center justify-center">
           <p className="text-slate-400 mb-1">交易结束！最终资金</p>
-          <p className="text-6xl font-bold text-green-600 mb-1">¥{finalValue}</p>
-          <p className={`text-xl font-semibold mb-8 ${profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          <p className="text-5xl font-bold text-green-600 mb-1">¥{finalValue}</p>
+          <p className={`text-lg font-semibold mb-3 ${profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
             {profit >= 0 ? `+¥${profit} 盈利` : `-¥${Math.abs(profit)} 亏损`}
           </p>
+          <p className="text-slate-400 text-sm mb-1">理论最高收益 +¥{bestGain}</p>
+          <div className="flex items-baseline gap-2 mb-8">
+            <p className="text-6xl font-bold text-indigo-600">{gameScore}</p>
+            <p className="text-slate-400 text-xl">分</p>
+          </div>
           <button
-            onClick={() => { addSession('stock', '炒股票', finalValue); router.push('/games') }}
+            onClick={() => { addSession('stock', '炒股票', gameScore); router.push('/games') }}
             className="w-full bg-indigo-600 text-white text-lg font-semibold py-4 rounded-xl"
           >
             记录并继续
